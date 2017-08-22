@@ -13,7 +13,6 @@ void CalendarData::process()
 	QProcess process;
 	QByteArray results;
 
-	qDebug() << __PRETTY_FUNCTION__;
 	process.start("python3", QStringList() << "/usr/bin/magicmirror.py");
 	if (!process.waitForFinished()) {
 		qWarning() << __PRETTY_FUNCTION__ << ": Error running magicmirror.py";
@@ -22,6 +21,7 @@ void CalendarData::process()
 	results = process.readAllStandardOutput();
 
 	processResults(results);
+	emit finished();
 }
 
 /*
@@ -52,12 +52,12 @@ void CalendarData::processResults(QByteArray &results)
 			QTimeZone tz(tzb.toInt() * 60 * 1000 * 60);
 			if (tz.isValid())
 				start.setTimeZone(tz);
-			QString event(start.toString("h:mm ap 'on' dddd, MMMM dd yyyy") + QString(" : ") + eventDescription.trimmed());
+			QString event(start.toString("h:mm ap 'on' dddd, MMMM dd") + QString(" : ") + eventDescription.trimmed());
 			emit newEvent(event);
 		}
 		else {
 			start = QDateTime::fromString(eventTime, "yyyy-MM-dd");
-			QString event(start.toString("dddd, MMMM dd yyyy") + QString(" : ") + eventDescription.trimmed());
+			QString event(start.toString("dddd, MMMM dd") + QString(" : ") + eventDescription.trimmed());
 			emit newEvent(event);
 		}
 	}

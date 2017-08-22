@@ -33,12 +33,14 @@ int main(int argc, char **argv)
     QApplication app (argc, argv);
     MirrorFrame *frame;
 
- //   printFonts();
+//    printFonts();
 
-//    frame.setGeometry(0, 0, 1920, 1280);
 
 	frame = new MirrorFrame();
+    	frame->setGeometry(0, 0, 1280, 1920);
 	frame->getEvents();
+	frame->getWeather();
+	frame->show();
 
     return app.exec();
 }

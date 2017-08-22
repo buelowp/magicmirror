@@ -19,6 +19,7 @@
 #include <QtCore/QtCore>
 #include <QtWidgets/QtWidgets>
 #include "CalendarData.h"
+#include "WeatherData.h"
 
 class MirrorFrame : public QFrame {
 	Q_OBJECT
@@ -28,15 +29,29 @@ public:
 
 public slots:
 	void getEvents();
+	void getWeather();
 	void calendarEventsDone();
 	void calendarEventsError(QString);
 	void calendarEventsEvent(QString);
+	void weatherDataError(QString);
+	void weatherEventsDone();
+	void currentConditions(QMap<QString,QString>);
+	void localForecast(QString);
 
 //protected:
 //	void showEvent(QShowEvent*);
 
 private:
-	QTimer *m_timer;
+	void deleteCalendarEventsList();
+
+	QTimer *m_calendarTimer;
+	QTimer *m_weatherTimer;
+	QList<QLabel*> m_calendarEvents;
+	QLabel *m_calLabel;
+	QLabel *m_currentLabel;
+	QLabel *m_forecastLabel;
+	int m_calEventsY;
+	bool m_newEventList;
 };
 
 #endif /* __MIRRORFRAME_H__ */

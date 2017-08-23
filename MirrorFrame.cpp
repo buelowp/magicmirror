@@ -219,7 +219,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
 	QString sky;
 
 
-	dt.setSecsSinceEpoch(jobj["dt"].toInt());
+	dt.setMSecsSinceEpoch(jobj["dt"].toInt() * 1000);
 	humidity = jobj["humidity"].toInt();
 	QJsonObject temp = jobj["temp"].toObject();
 	high = temp["max"].toDouble() + 0.5;

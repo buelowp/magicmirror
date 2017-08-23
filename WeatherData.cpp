@@ -22,6 +22,7 @@ void WeatherData::addZip(QString z)
 void WeatherData::addAppID(QString a)
 {
 	m_appID = a;
+	qDebug() << __PRETTY_FUNCTION__ << ":" << m_appID;
 }
 
 void WeatherData::processCurrentWeather()
@@ -58,6 +59,7 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 		qWarning() << __PRETTY_FUNCTION__ << ":" << reply->errorString();
 	}
 	else {
+		qDebug() << __PRETTY_FUNCTION__;
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
 		QJsonObject jobj = jdoc.object();
 		QJsonObject main = jobj["main"].toObject();
@@ -68,14 +70,14 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 
 		QJsonObject sys = jobj["sys"].toObject();
 		QDateTime t;
-		t.setSecsSinceEpoch(sys["sunrise"].toInt());
+		t.setMSecsSinceEpoch(sys["sunrise"].toInt() * 1000);
 		if (t.isValid())
 			emit sunrise(t);
 		else
 			qDebug() << __PRETTY_FUNCTION__ << ": t isn't valid, seconds are" << sys["sunrise"].toInt();
 
 		QDateTime t2;
-		t2.setSecsSinceEpoch(sys["sunset"].toInt());
+		t2.setMSecsSinceEpoch(sys["sunset"].toInt() * 1000);
 		if (t2.isValid())
 			emit sunset(t2);
 		else
@@ -95,6 +97,7 @@ void WeatherData::forecastReplyFinished(QNetworkReply *reply)
 		qWarning() << __PRETTY_FUNCTION__ << ":" << reply->errorString();
 	}
 	else {
+		qDebug() << __PRETTY_FUNCTION__;
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
 		QJsonObject jobj = jdoc.object();
 		QJsonArray entries = jobj["list"].toArray();

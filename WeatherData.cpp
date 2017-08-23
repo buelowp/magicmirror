@@ -24,12 +24,6 @@ void WeatherData::addAppID(QString a)
 	m_appID = a;
 }
 
-void WeatherData::process()
-{
-	processCurrentWeather();
-	processForecast();
-}
-
 void WeatherData::processCurrentWeather()
 {
 	QUrl u("http://api.openweathermap.org/data/2.5/weather");
@@ -40,7 +34,6 @@ void WeatherData::processCurrentWeather()
 	query.addQueryItem("units", "imperial");
 	u.setQuery(query);
 
-	qDebug() << __PRETTY_FUNCTION__ << ":" << u;
 	m_current->get(QNetworkRequest(u));
 }
 
@@ -55,7 +48,6 @@ void WeatherData::processForecast()
 	query.addQueryItem("cnt", "3");
 	u.setQuery(query);
 
-	qDebug() << __PRETTY_FUNCTION__ << ":" << u;
 	m_forecast->get(QNetworkRequest(u));
 }
 
@@ -68,16 +60,32 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 	else {
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
 		QJsonObject jobj = jdoc.object();
-		QMap<QString,QString> forecast;
-		forecast["temp"] = jobj["temp"].toString();
-		forecast["humidity"] = jobj["humidity"].toString();
-		forecast["wind"] = jobj["speed"].toString();
+		QJsonObject main = jobj["main"].toObject();
+		emit temperature(main["temp"].toDouble());
+		emit humidity(main["humidity"].toDouble());
+		QJsonObject wind = jobj["wind"].toObject();
+		emit windSpeed(wind["speed"].toDouble());
+
+		QJsonObject sys = jobj["sys"].toObject();
+		QDateTime t;
+		t.setSecsSinceEpoch(sys["sunrise"].toInt());
+		if (t.isValid())
+			emit sunrise(t);
+		else
+			qDebug() << __PRETTY_FUNCTION__ << ": t isn't valid, seconds are" << sys["sunrise"].toInt();
+
+		QDateTime t2;
+		t2.setSecsSinceEpoch(sys["sunset"].toInt());
+		if (t2.isValid())
+			emit sunset(t2);
+		else
+			qDebug() << __PRETTY_FUNCTION__ << ": t2 isn't valid, seconds are" << sys["sunset"].toInt();
+
 		QJsonArray weather = jobj["weather"].toArray();
 		for (int i = 0; i < weather.size(); ++i) {
 			QJsonObject obj = weather[i].toObject();
-			forecast["sky"] = obj["description"].toString();
+			emit skyConditions(obj["main"].toString());
 		}
-		emit currentConditions(forecast);
 	}
 }
 
@@ -88,10 +96,11 @@ void WeatherData::forecastReplyFinished(QNetworkReply *reply)
 	}
 	else {
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
-		if (!jdoc.isNull()) {
-			qDebug() << jdoc.toJson(QJsonDocument::Indented);
+		QJsonObject jobj = jdoc.object();
+		QJsonArray entries = jobj["list"].toArray();
+		for (int i = 0; i < entries.size(); i++) {
+			emit forecastEntry(entries[i].toObject());
 		}
-		else
-			qWarning() << __PRETTY_FUNCTION__ << ": Unable to parse reply";
 	}
+	emit forecastFinished();
 }

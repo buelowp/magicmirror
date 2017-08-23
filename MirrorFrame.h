@@ -29,14 +29,21 @@ public:
 
 public slots:
 	void getEvents();
-	void getWeather();
+	void getForecast();
+	void getCurrentWeather();
 	void calendarEventsDone();
 	void calendarEventsError(QString);
 	void calendarEventsEvent(QString);
 	void weatherDataError(QString);
 	void weatherEventsDone();
-	void currentConditions(QMap<QString,QString>);
-	void localForecast(QString);
+	void currentHumidity(double);
+	void currentSkyConditions(QString);
+	void currentTemperature(double);
+	void currentWindSpeed(double);
+	void sunrise(QDateTime);
+	void sunset(QDateTime);
+	void forecastEntry(QJsonObject);
+	void forecastFinished();
 
 //protected:
 //	void showEvent(QShowEvent*);
@@ -45,12 +52,28 @@ private:
 	void deleteCalendarEventsList();
 
 	QTimer *m_calendarTimer;
-	QTimer *m_weatherTimer;
+	QTimer *m_forecastTimer;
+	QTimer *m_currentWeatherTimer;
 	QList<QLabel*> m_calendarEvents;
 	QLabel *m_calLabel;
 	QLabel *m_currentLabel;
 	QLabel *m_forecastLabel;
+	QLabel *m_currentTemp;
+	QLabel *m_currentHumidity;
+	QLabel *m_currentWind;
+	QLabel *m_currentSky;
+	QLabel *m_sunrise;
+	QLabel *m_sunset;
+	QLabel *m_currentTempLabel;
+	QLabel *m_currentHumidityLabel;
+	QLabel *m_currentWindLabel;
+	QLabel *m_currentSkyLabel;
+	QLabel *m_sunriseLabel;
+	QLabel *m_sunsetLabel;
+
+	QVector<QLabel*> m_forecastEntries;
 	int m_calEventsY;
+	int m_forecastIndex;
 	bool m_newEventList;
 };
 

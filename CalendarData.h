@@ -30,6 +30,10 @@ signals:
 	void newEvent(QString);
 	void finished();
 	void error(QString);
+	void temperature(double);
+	void humidity(double);
+	void windSpeed(double);
+	void skyConditions(QString);
 
 private:
 	void processResults(QByteArray&);

@@ -16,19 +16,24 @@ public:
 
 signals:
 	void currentConditions(QMap<QString,QString>);
-	void localForecast(QString);
+	void forecastEntry(QJsonObject);
 	void finished();
 	void error(QString);
+	void temperature(double);
+	void humidity(double);
+	void windSpeed(double);
+	void skyConditions(QString);
+	void sunrise(QDateTime);
+	void sunset(QDateTime);
+	void forecastFinished();
 
 public slots:
-	void process();
+	void processForecast();
+	void processCurrentWeather();
 	void forecastReplyFinished(QNetworkReply*);
 	void currentReplyFinished(QNetworkReply*);
 
 private:
-	void processCurrentWeather();
-	void processForecast();
-
 	QNetworkAccessManager *m_forecast;
 	QNetworkAccessManager *m_current;
 	QString m_appID;

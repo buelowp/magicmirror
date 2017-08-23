@@ -39,7 +39,8 @@ int main(int argc, char **argv)
 	frame = new MirrorFrame();
     	frame->setGeometry(0, 0, 1280, 1920);
 	frame->getEvents();
-	frame->getWeather();
+	frame->getCurrentWeather();
+	frame->getForecast();
 	frame->show();
 
     return app.exec();

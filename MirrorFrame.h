@@ -44,6 +44,7 @@ public slots:
 	void sunset(QDateTime);
 	void forecastEntry(QJsonObject);
 	void forecastFinished();
+	void updateClock();
 
 //protected:
 //	void showEvent(QShowEvent*);
@@ -54,6 +55,7 @@ private:
 	QTimer *m_calendarTimer;
 	QTimer *m_forecastTimer;
 	QTimer *m_currentWeatherTimer;
+	QTimer *m_clockTimer;
 	QList<QLabel*> m_calendarEvents;
 	QLabel *m_calLabel;
 	QLabel *m_currentLabel;
@@ -70,6 +72,7 @@ private:
 	QLabel *m_currentSkyLabel;
 	QLabel *m_sunriseLabel;
 	QLabel *m_sunsetLabel;
+	QLabel *m_clockLabel;
 
 	QVector<QLabel*> m_forecastEntries;
 	int m_calEventsY;

@@ -46,7 +46,7 @@ void WeatherData::processForecast()
 	query.addQueryItem("appid", m_appID);
 	query.addQueryItem("zip", m_zip);
 	query.addQueryItem("units", "imperial");
-	query.addQueryItem("cnt", "3");
+	query.addQueryItem("cnt", "5");
 	u.setQuery(query);
 
 	m_forecast->get(QNetworkRequest(u));

@@ -40,10 +40,11 @@ public slots:
 	void currentSkyConditions(QString);
 	void currentTemperature(double);
 	void currentWindSpeed(double);
-	void sunrise(QDateTime);
-	void sunset(QDateTime);
+	void sunrise(qint64);
+	void sunset(qint64);
 	void forecastEntry(QJsonObject);
 	void forecastFinished();
+	void currentConditionsFinished();
 
 //protected:
 //	void showEvent(QShowEvent*);

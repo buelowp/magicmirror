@@ -67,26 +67,15 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 		emit windSpeed(wind["speed"].toDouble());
 
 		QJsonObject sys = jobj["sys"].toObject();
-		QDateTime t;
-		t.setSecsSinceEpoch(sys["sunrise"].toInt());
-		if (t.isValid())
-			emit sunrise(t);
-		else
-			qDebug() << __PRETTY_FUNCTION__ << ": t isn't valid, seconds are" << sys["sunrise"].toInt();
-
-		QDateTime t2;
-		t2.setSecsSinceEpoch(sys["sunset"].toInt());
-		if (t2.isValid())
-			emit sunset(t2);
-		else
-			qDebug() << __PRETTY_FUNCTION__ << ": t2 isn't valid, seconds are" << sys["sunset"].toInt();
-
+		emit sunrise(static_cast<qint64>(sys["sunrise"].toInt()));
+		emit sunset(static_cast<qint64>(sys["sunset"].toInt()));
 		QJsonArray weather = jobj["weather"].toArray();
 		for (int i = 0; i < weather.size(); ++i) {
 			QJsonObject obj = weather[i].toObject();
 			emit skyConditions(obj["main"].toString());
 		}
 	}
+	emit currentConditionsFinished();
 }
 
 void WeatherData::forecastReplyFinished(QNetworkReply *reply)

@@ -123,6 +123,7 @@ void MirrorFrame::getCurrentWeather()
 	event->addAppID(settings.value("appid").toString());
 	event->moveToThread(thread);
 	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
+	connect(event, SIGNAL(currentConditionsFinished()), this, SLOT(currentConditionsFinished()));
 	connect(event, SIGNAL(error(QString)), this, SLOT(weatherDataError(QString)));
 	connect(event, SIGNAL(finished()), event, SLOT(deleteLater()));
 	connect(event, SIGNAL(finished()), this, SLOT(weatherEventsDone()));
@@ -132,8 +133,8 @@ void MirrorFrame::getCurrentWeather()
 	connect(event, SIGNAL(humidity(double)), this, SLOT(currentHumidity(double)));
 	connect(event, SIGNAL(windSpeed(double)), this, SLOT(currentWindSpeed(double)));
 	connect(event, SIGNAL(skyConditions(QString)), this, SLOT(currentSkyConditions(QString)));
-	connect(event, SIGNAL(sunrise(QDateTime)), this, SLOT(sunrise(QDateTime)));
-	connect(event, SIGNAL(sunset(QDateTime)), this, SLOT(sunset(QDateTime)));
+	connect(event, SIGNAL(sunrise(qint64)), this, SLOT(sunrise(qint64)));
+	connect(event, SIGNAL(sunset(qint64)), this, SLOT(sunset(qint64)));
 	thread->start();
 }
 
@@ -147,6 +148,7 @@ void MirrorFrame::getForecast()
 	event->addAppID(settings.value("appid").toString());
 	event->moveToThread(thread);
 	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
+	connect(event, SIGNAL(forecastFinished()), this, SLOT(forecastFinished()));
 	connect(event, SIGNAL(error(QString)), this, SLOT(weatherDataError(QString)));
 	connect(event, SIGNAL(finished()), event, SLOT(deleteLater()));
 	connect(event, SIGNAL(finished()), this, SLOT(weatherEventsDone()));
@@ -156,14 +158,18 @@ void MirrorFrame::getForecast()
 	thread->start();
 }
 
-void MirrorFrame::sunrise(QDateTime t)
+void MirrorFrame::sunrise(qint64 t)
 {
-	m_sunrise->setText(QString("<center>%1</center>").arg(t.toString("hh:mm ap")));
+	QDateTime s;
+	s.setMSecsSinceEpoch(t * 1000);
+	m_sunrise->setText(QString("<center>%1</center>").arg(s.toString("hh:mm ap")));
 }
 
-void MirrorFrame::sunset(QDateTime t)
+void MirrorFrame::sunset(qint64 t)
 {
-	m_sunset->setText(QString("<center>%1</center>").arg(t.toString("hh:mm ap")));
+	QDateTime s;
+	s.setMSecsSinceEpoch(t * 1000);
+	m_sunset->setText(QString("<center>%1</center>").arg(s.toString("hh:mm ap")));
 }
 
 void MirrorFrame::weatherEventsDone()
@@ -207,7 +213,12 @@ void MirrorFrame::weatherDataError(QString)
 
 void MirrorFrame::forecastFinished()
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	m_forecastIndex = 0;
+}
+
+void MirrorFrame::currentConditionsFinished()
+{
 }
 
 void MirrorFrame::forecastEntry(QJsonObject jobj)

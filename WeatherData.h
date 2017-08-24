@@ -23,9 +23,10 @@ signals:
 	void humidity(double);
 	void windSpeed(double);
 	void skyConditions(QString);
-	void sunrise(QDateTime);
-	void sunset(QDateTime);
+	void sunrise(qint64);
+	void sunset(qint64);
 	void forecastFinished();
+	void currentConditionsFinished();
 
 public slots:
 	void processForecast();

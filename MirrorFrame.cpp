@@ -14,6 +14,10 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	connect(m_currentWeatherTimer, SIGNAL(timeout()), this, SLOT(getCurrentWeather()));
 	m_currentWeatherTimer->start(1000 * 60 * 60 * 12);
 
+	m_clockTimer = new QTimer();
+	connect(m_clockTimer, SIGNAL(timeout()), this, SLOT(updateClock()));
+	m_clockTimer->start(250);
+
 	QPalette pal(QColor(0,0,0));
 	setBackgroundRole(QPalette::Window);
 	pal.setColor(QPalette::Window, Qt::black);
@@ -23,16 +27,21 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_calLabel = new QLabel("<font color='white'>Upcoming Events", this);
 	m_forecastLabel = new QLabel("<font color='white'>Local Forecast</font>", this);
 	m_currentLabel = new QLabel("<font color='white'>Outside Conditions</font>", this);
+	m_clockLabel = new QLabel(this);
 
 	QFont f("Roboto");
 	f.setPixelSize(50);
 	f.setBold(true);
-	m_calLabel->setGeometry(50, 10, 750, 100);
+	m_calLabel->setGeometry(50, 10, 500, 100);
 	m_calLabel->setFont(f);
-	m_currentLabel->setGeometry(50, 1000, 750, 100);
+	m_currentLabel->setGeometry(50, 1000, 500, 100);
 	m_currentLabel->setFont(f);
-	m_forecastLabel->setGeometry(50, 1400, 750, 100);
+	m_forecastLabel->setGeometry(50, 1400, 500, 100);
 	m_forecastLabel->setFont(f);
+
+	m_clockLabel->setGeometry(700, 10, 650, 100);
+	f.setPixelSize(40);
+	m_clockLabel->setFont(f);
 
 	f.setPixelSize(30);
 	m_currentTempLabel = new QLabel(this);
@@ -41,32 +50,32 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_currentSkyLabel = new QLabel(this);
 
 	m_currentTempLabel = new QLabel(this);
-	m_currentTempLabel->setGeometry(100, 1100, 300, 50);
+	m_currentTempLabel->setGeometry(50, 1100, 350, 50);
 	m_currentTempLabel->setFont(f);
-	m_currentTempLabel->setText("<center>Current Temperature</center>");
+	m_currentTempLabel->setText("<center>Temperature</center>");
 
 	m_currentHumidityLabel = new QLabel(this);
-	m_currentHumidityLabel->setGeometry(400, 1100, 300, 50);
+	m_currentHumidityLabel->setGeometry(400, 1100, 350, 50);
 	m_currentHumidityLabel->setFont(f);
-	m_currentHumidityLabel->setText("<center>Current Humidity</center>");
+	m_currentHumidityLabel->setText("<center>Humidity</center>");
 
 	m_sunriseLabel = new QLabel(this);
-	m_sunriseLabel->setGeometry(700, 1100, 300, 50);
+	m_sunriseLabel->setGeometry(750, 1100, 350, 50);
 	m_sunriseLabel->setFont(f);
 	m_sunriseLabel->setText("<center>Sunrise</center>");
 
 	m_currentWindLabel = new QLabel(this);
-	m_currentWindLabel->setGeometry(100, 1200, 300, 50);
+	m_currentWindLabel->setGeometry(50, 1200, 350, 50);
 	m_currentWindLabel->setFont(f);
-	m_currentWindLabel->setText("<center>Current Wind Speed</center>");
+	m_currentWindLabel->setText("<center>Wind Speed</center>");
 
 	m_currentSkyLabel = new QLabel(this);
-	m_currentSkyLabel->setGeometry(400, 1200, 300, 50);
+	m_currentSkyLabel->setGeometry(400, 1200, 350, 50);
 	m_currentSkyLabel->setFont(f);
 	m_currentSkyLabel->setText("<center>Sky Conditions</center>");
 
 	m_sunsetLabel = new QLabel(this);
-	m_sunsetLabel->setGeometry(700, 1200, 300, 50);
+	m_sunsetLabel->setGeometry(750, 1200, 350, 50);
 	m_sunsetLabel->setFont(f);
 	m_sunsetLabel->setText("<center>Sunset</center>");
 
@@ -74,32 +83,32 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	f.setBold(false);
 
 	m_currentTemp = new QLabel(this);
-	m_currentTemp->setGeometry(100, 1150, 300, 50);
+	m_currentTemp->setGeometry(50, 1150, 350, 50);
 	m_currentTemp->setFont(f);
 
 	m_currentHumidity = new QLabel(this);
-	m_currentHumidity->setGeometry(400, 1150, 300, 50);
+	m_currentHumidity->setGeometry(400, 1150, 350, 50);
 	m_currentHumidity->setFont(f);
 
 	m_sunrise = new QLabel(this);
-	m_sunrise->setGeometry(700, 1150, 300, 50);
+	m_sunrise->setGeometry(750, 1150, 350, 50);
 	m_sunrise->setFont(f);
 
 	m_currentWind = new QLabel(this);
-	m_currentWind->setGeometry(100, 1250, 300, 50);
+	m_currentWind->setGeometry(50, 1250, 350, 50);
 	m_currentWind->setFont(f);
 
 	m_currentSky = new QLabel(this);
-	m_currentSky->setGeometry(400, 1250, 300, 50);
+	m_currentSky->setGeometry(400, 1250, 350, 50);
 	m_currentSky->setFont(f);
 
 	m_sunset = new QLabel(this);
-	m_sunset->setGeometry(700, 1250, 300, 50);
+	m_sunset->setGeometry(750, 1250, 350, 50);
 	m_sunset->setFont(f);
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 5; i++) {
 		QLabel *lb = new QLabel(this);
-		lb->setGeometry(100, ((i * 50) + 1500), 1000, 50);
+		lb->setGeometry(50, ((i * 50) + 1500), 1200, 50);
 		lb->setFont(f);
 		m_forecastEntries.push_back(lb);
 	}
@@ -111,6 +120,12 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 
 MirrorFrame::~MirrorFrame()
 {
+}
+
+void MirrorFrame::updateClock()
+{
+	QDateTime now = QDateTime::currentDateTime();
+	m_clockLabel->setText(now.toString("ddd MMM d h:m ap"));
 }
 
 void MirrorFrame::getCurrentWeather()
@@ -224,13 +239,16 @@ void MirrorFrame::currentConditionsFinished()
 void MirrorFrame::forecastEntry(QJsonObject jobj)
 {
 	QDateTime dt;
+	QDateTime now = QDateTime::currentDateTime();
 	int humidity;
 	double high;
 	double low;
 	QString sky;
 
 
-	dt.setSecsSinceEpoch(jobj["dt"].toInt());
+	qint64 secs = jobj["dt"].toInt();
+	secs *= 1000;
+	dt.setMSecsSinceEpoch(secs);
 	humidity = jobj["humidity"].toInt();
 	QJsonObject temp = jobj["temp"].toObject();
 	high = temp["max"].toDouble() + 0.5;
@@ -239,10 +257,44 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
 	for (int i = 0; i < weather.size(); ++i) {
 		QJsonObject obj = weather[i].toObject();
 		sky = obj["main"].toString();
+		if (sky == "Clear")
+			sky.append(" Skies");
 	}
 
 	QLabel *lb = m_forecastEntries[m_forecastIndex++];
-	lb->setText(QString("%1: It will be %2 with a high of %3, a low of %4, and humidity of %5").arg(dt.toString("MMM d")).arg(sky).arg((int)high).arg((int)low).arg(humidity));
+	if (now.date() == dt.date()) {
+		QString text = QString("Today will see %1 with a high of %2%3, a low of %4%5")
+			.arg(sky)
+			.arg((int)high)
+			.arg(QChar(0260))
+			.arg((int)low)
+			.arg(QChar(0260));
+
+		if (humidity > 75) {
+			text.append(", and may feel humid");
+		}
+		else if (humidity < 55) {
+			text.append(", and should feel dry");
+		}
+		lb->setText(text);
+	}
+	else {
+		QString text = QString("%1 will see %2 with a high of %3%4, a low of %5%6")
+			.arg(dt.toString("MMM d"))
+			.arg(sky)
+			.arg((int)high)
+			.arg(QChar(0260))
+			.arg((int)low)
+			.arg(QChar(0260));
+
+		if (humidity > 75) {
+			text.append(", and may feel humid");
+		}
+		else if (humidity < 55) {
+			text.append(", and should feel dry");
+		}
+		lb->setText(text);
+	}
 }
 
 void MirrorFrame::getEvents()

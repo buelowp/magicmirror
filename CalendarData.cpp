@@ -12,7 +12,7 @@ void CalendarData::process()
 {
 	QProcess process;
 	QByteArray results;
-/*
+
 	process.start("python3", QStringList() << "/usr/bin/magicmirror.py");
 	if (!process.waitForFinished()) {
 		qWarning() << __PRETTY_FUNCTION__ << ": Error running magicmirror.py";
@@ -21,7 +21,6 @@ void CalendarData::process()
 	results = process.readAllStandardOutput();
 
 	processResults(results);
-	*/
 	emit finished();
 }
 

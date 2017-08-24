@@ -22,6 +22,7 @@ void WeatherData::addZip(QString z)
 void WeatherData::addAppID(QString a)
 {
 	m_appID = a;
+	qDebug() << __PRETTY_FUNCTION__ << ":" << m_appID;
 }
 
 void WeatherData::processCurrentWeather()
@@ -45,7 +46,7 @@ void WeatherData::processForecast()
 	query.addQueryItem("appid", m_appID);
 	query.addQueryItem("zip", m_zip);
 	query.addQueryItem("units", "imperial");
-	query.addQueryItem("cnt", "3");
+	query.addQueryItem("cnt", "5");
 	u.setQuery(query);
 
 	m_forecast->get(QNetworkRequest(u));
@@ -58,6 +59,7 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 		qWarning() << __PRETTY_FUNCTION__ << ":" << reply->errorString();
 	}
 	else {
+		qDebug() << __PRETTY_FUNCTION__;
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
 		QJsonObject jobj = jdoc.object();
 		QJsonObject main = jobj["main"].toObject();
@@ -84,6 +86,7 @@ void WeatherData::forecastReplyFinished(QNetworkReply *reply)
 		qWarning() << __PRETTY_FUNCTION__ << ":" << reply->errorString();
 	}
 	else {
+		qDebug() << __PRETTY_FUNCTION__;
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
 		QJsonObject jobj = jdoc.object();
 		QJsonArray entries = jobj["list"].toArray();

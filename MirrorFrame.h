@@ -20,6 +20,7 @@
 #include <QtWidgets/QtWidgets>
 #include "CalendarData.h"
 #include "WeatherData.h"
+#include "MotionDetect.h"
 
 class MirrorFrame : public QFrame {
 	Q_OBJECT
@@ -46,17 +47,25 @@ public slots:
 	void forecastFinished();
 	void currentConditionsFinished();
 	void updateClock();
+	void monitorOn();
+	void monitorOff();
 
 //protected:
 //	void showEvent(QShowEvent*);
 
 private:
 	void deleteCalendarEventsList();
+	void createStateMachine();
+	void enableTimers();
+	void turnMonitorOn();
+	void turnMonitorOff();
 
+	QStateMachine *m_monitorState;
 	QTimer *m_calendarTimer;
 	QTimer *m_forecastTimer;
 	QTimer *m_currentWeatherTimer;
 	QTimer *m_clockTimer;
+	QTimer *m_monitorTimer;
 	QList<QLabel*> m_calendarEvents;
 	QLabel *m_calLabel;
 	QLabel *m_currentLabel;
@@ -74,11 +83,14 @@ private:
 	QLabel *m_sunriseLabel;
 	QLabel *m_sunsetLabel;
 	QLabel *m_clockLabel;
-
 	QVector<QLabel*> m_forecastEntries;
+	
+	MotionDetect *m_motionDetect;
+	
 	int m_calEventsY;
 	int m_forecastIndex;
 	bool m_newEventList;
+	bool m_resetForecastTimer;
 };
 
 #endif /* __MIRRORFRAME_H__ */

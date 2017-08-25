@@ -186,6 +186,7 @@ void MirrorFrame::updateClock()
 {
 	QDateTime now = QDateTime::currentDateTime();
 	m_clockLabel->setText(now.toString("ddd MMM d h:m ap"));
+	update();
 }
 
 void MirrorFrame::getCurrentWeather()

@@ -7,8 +7,9 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_forecastTimer = new QTimer();
 	m_currentWeatherTimer = new QTimer();
 	m_clockTimer = new QTimer();
+	m_monitorTimer = new QTimer();
 	m_motionDetect = new MotionDetect();
-	m_monitorState = new QStateMachine();
+	m_monitorState = new QStateMachine(this);
 	
 	QPalette pal(QColor(0,0,0));
 	setBackgroundRole(QPalette::Window);
@@ -127,7 +128,10 @@ void MirrorFrame::createStateMachine()
 	on->addTransition(m_monitorTimer, SIGNAL(timeout()), off);
 	connect(on, SIGNAL(entered()), this, SLOT(monitorOn()));
 	connect(off, SIGNAL(entered()), this, SLOT(monitorOff()));
+	m_monitorState->addState(on);
+	m_monitorState->addState(off);
 	m_monitorState->setInitialState(on);
+	m_monitorState->start();
 }
 
 void MirrorFrame::enableTimers()
@@ -139,18 +143,18 @@ void MirrorFrame::enableTimers()
 	midnight.setDate(tomorrow);
 		
 	connect(m_calendarTimer, SIGNAL(timeout()), this, SLOT(getEvents()));
-	m_calendarTimer->start(1000 * 60 * 60);		// Get Events once an hour
+	m_calendarTimer->start(CALEVENTS_TIMEOUT);		// Get Events once an hour
 	
 	connect(m_forecastTimer, SIGNAL(timeout()), this, SLOT(getForecast()));
-	m_forecastTimer->start(now.msecsTo(midnight));		// get forecast every 12 hours
+	m_forecastTimer->start(now.msecsTo(midnight));		// set to timeout at midnight, we reset it to 12 hours later
 	
 	connect(m_currentWeatherTimer, SIGNAL(timeout()), this, SLOT(getCurrentWeather()));
-	m_currentWeatherTimer->start(1000 * 60 * 60);	// get current weather conditions once an hour
+	m_currentWeatherTimer->start(CURRENT_TIMEOUT);	// get current weather conditions once an hour
 	
 	connect(m_clockTimer, SIGNAL(timeout()), this, SLOT(updateClock()));
 	m_clockTimer->start(250);					// Update the clock 4x a second
 
-	m_monitorTimer->start(1000 * 60 * 15);
+	m_monitorTimer->start(MONITOR_TIMEOUT);
 }
 
 void MirrorFrame::monitorOff()
@@ -162,7 +166,10 @@ void MirrorFrame::monitorOff()
 
 void MirrorFrame::monitorOn()
 {
-	m_monitorTimer->setInterval(1000 * 60 * 15);
+	if (!m_monitorTimer->isActive()) {
+		m_monitorTimer->setInterval(MONITOR_TIMEOUT);
+		m_monitorTimer->start();
+	}
 	turnMonitorOn();
 }
 
@@ -185,7 +192,7 @@ void MirrorFrame::turnMonitorOn()
 void MirrorFrame::updateClock()
 {
 	QDateTime now = QDateTime::currentDateTime();
-	m_clockLabel->setText(now.toString("ddd MMM d h:m ap"));
+	m_clockLabel->setText(now.toString("ddd MMM d h:mm ap"));
 	update();
 }
 
@@ -233,7 +240,7 @@ void MirrorFrame::getForecast()
 	connect(event, SIGNAL(forecastEntry(QJsonObject)), this, SLOT(forecastEntry(QJsonObject)));
 	thread->start();
 	m_resetForecastTimer = false;
-	m_forecastTimer->setInterval(1000 * 60 * 60 * 12);		// Run the forecaster every 12 hours
+	m_forecastTimer->setInterval(FORECAST_TIMEOUT);		// Run the forecaster every 12 hours
 }
 
 void MirrorFrame::sunrise(qint64 t)
@@ -291,7 +298,6 @@ void MirrorFrame::weatherDataError(QString)
 
 void MirrorFrame::forecastFinished()
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	m_forecastIndex = 0;
 }
 

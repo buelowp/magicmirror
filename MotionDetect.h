@@ -16,7 +16,7 @@ public:
 	MotionDetect(QObject *parent = 0);
 	virtual ~MotionDetect();
 
-	bool open();
+	bool open(int);
 	void close();
 
 signals:
@@ -24,9 +24,11 @@ signals:
 
 public slots:
 	void detected();
+	void enable();
 
 private:
-	QTimer *m_timer;
+	QFile *m_pin;
+	QSocketNotifier *m_notification;
 };
 
 #endif /* MOTIONDETECT_H_ */

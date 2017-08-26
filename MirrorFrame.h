@@ -55,6 +55,9 @@ public slots:
 	void monitorOn();
 	void monitorOff();
 
+signals:
+	void enableMotionDetect();
+
 //protected:
 //	void showEvent(QShowEvent*);
 

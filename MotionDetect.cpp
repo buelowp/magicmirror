@@ -9,25 +9,43 @@
 
 MotionDetect::MotionDetect(QObject *parent) : QObject(parent)
 {
-	m_timer = new QTimer();
-	connect(m_timer, SIGNAL(timeout()), this, SLOT(detected()));
-	m_timer->start(1000 * 60 * 2);
 }
 
 MotionDetect::~MotionDetect()
 {
 }
 
-bool MotionDetect::open()
+bool MotionDetect::open(int pin)
 {
+	QString gpio = QString("/sys/class/gpio/gpio%1/value").arg(pin);
+
+	m_pin = new QFile(gpio);
+	m_pin->open(QIODevice::ReadOnly | QIODevice::Text);
+	if (!m_pin->isOpen()) {
+		qWarning() << __PRETTY_FUNCTION__ << ": Unable to open" << gpio;
+		return false;
+	}
+	m_notification = new QSocketNotifier(m_pin->handle(), QSocketNotifier::Read);
+	connect(m_notification, SIGNAL(activated()), this, SLOT(detected()));
+//	m_notification->setEnabled(false);
 	return true;
 }
 
 void MotionDetect::close()
 {
+	m_notification->setEnabled(false);
+	m_pin->close();
 }
 
 void MotionDetect::detected()
 {
-	emit motionDetected();
+	QByteArray value = m_pin->readAll();
+//	m_notification->setEnabled(false);
+	if (value.size() == 1 && value[0] == '1')
+		emit motionDetected();
+}
+
+void MotionDetect::enable()
+{
+//	m_notification->setEnabled(true);
 }

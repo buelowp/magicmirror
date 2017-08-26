@@ -11,6 +11,8 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_motionDetect = new MotionDetect();
 	m_monitorState = new QStateMachine(this);
 	
+	connect(this, SIGNAL(enableMotionDetect()), m_motionDetect, SLOT(enable()));
+
 	QPalette pal(QColor(0,0,0));
 	setBackgroundRole(QPalette::Window);
 	pal.setColor(QPalette::Window, Qt::black);
@@ -162,6 +164,8 @@ void MirrorFrame::monitorOff()
 	turnMonitorOff();
 	if (m_monitorTimer->isActive())
 		m_monitorTimer->stop();
+
+	emit enableMotionDetect();
 }
 
 void MirrorFrame::monitorOn()

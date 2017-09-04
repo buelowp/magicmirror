@@ -13,8 +13,9 @@ void CalendarData::process()
 	QProcess process;
 	QByteArray results;
 
+	qDebug() << __PRETTY_FUNCTION__;
 	process.start("python3", QStringList() << "/usr/bin/magicmirror.py");
-	if (!process.waitForFinished()) {
+	if (!process.waitForFinished(120000)) {
 		qWarning() << __PRETTY_FUNCTION__ << ": Error running magicmirror.py";
 		emit error(QString("Error running magicmirror.py"));
 	}
@@ -40,6 +41,7 @@ void CalendarData::processResults(QByteArray &results)
 {
 	QDateTime start;
 	QList<QByteArray> events = results.split('\n');
+	qDebug() << __PRETTY_FUNCTION__;
 	for (int i = 0; i < events.size(); i++) {
 		if (events.at(i).size() == 0)
 			continue;

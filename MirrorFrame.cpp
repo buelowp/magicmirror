@@ -115,6 +115,9 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	
 	createStateMachine();
 	enableTimers();
+	if (!m_motionDetect->open(17)) {
+		qWarning() << __PRETTY_FUNCTION__ << ": Unable to open GPIO 17";
+	}
 }
 
 MirrorFrame::~MirrorFrame()
@@ -130,6 +133,7 @@ void MirrorFrame::createStateMachine()
 	on->addTransition(m_monitorTimer, SIGNAL(timeout()), off);
 	connect(on, SIGNAL(entered()), this, SLOT(monitorOn()));
 	connect(off, SIGNAL(entered()), this, SLOT(monitorOff()));
+	connect(m_motionDetect, SIGNAL(motionDetected()), this, SLOT(resetMonitorTimer()));
 	m_monitorState->addState(on);
 	m_monitorState->addState(off);
 	m_monitorState->setInitialState(on);
@@ -154,13 +158,23 @@ void MirrorFrame::enableTimers()
 	m_currentWeatherTimer->start(CURRENT_TIMEOUT);	// get current weather conditions once an hour
 	
 	connect(m_clockTimer, SIGNAL(timeout()), this, SLOT(updateClock()));
-	m_clockTimer->start(250);					// Update the clock 4x a second
+	m_clockTimer->start(1000);					// Update the clock 1x a second
+
+	m_monitorTimer->start(MONITOR_TIMEOUT);
+}
+
+void MirrorFrame::resetMonitorTimer()
+{
+	qDebug() << __PRETTY_FUNCTION__;
+	if (m_monitorTimer->isActive())
+		m_monitorTimer->stop();
 
 	m_monitorTimer->start(MONITOR_TIMEOUT);
 }
 
 void MirrorFrame::monitorOff()
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	turnMonitorOff();
 	if (m_monitorTimer->isActive())
 		m_monitorTimer->stop();
@@ -170,6 +184,7 @@ void MirrorFrame::monitorOff()
 
 void MirrorFrame::monitorOn()
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	if (!m_monitorTimer->isActive()) {
 		m_monitorTimer->setInterval(MONITOR_TIMEOUT);
 		m_monitorTimer->start();
@@ -181,6 +196,7 @@ void MirrorFrame::turnMonitorOff()
 {
 	QProcess p;
 	
+	qDebug() << __PRETTY_FUNCTION__;
 	p.start("vcgencmd", QStringList() << "display_power" << "0");
 	p.waitForFinished();
 }
@@ -189,6 +205,7 @@ void MirrorFrame::turnMonitorOn()
 {
 	QProcess p;
 	
+	qDebug() << __PRETTY_FUNCTION__;
 	p.start("vcgencmd", QStringList() << "display_power" << "1");
 	p.waitForFinished();
 }
@@ -204,6 +221,7 @@ void MirrorFrame::getCurrentWeather()
 {
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
 
+	qDebug() << __PRETTY_FUNCTION__;
 	QThread* thread = new QThread;
 	WeatherData *event = new WeatherData();
 	event->addZip("60005");
@@ -229,6 +247,7 @@ void MirrorFrame::getForecast()
 {
 	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
 
+	qDebug() << __PRETTY_FUNCTION__;
 	QThread* thread = new QThread;
 	WeatherData *event = new WeatherData();
 	event->addZip("60005");
@@ -249,6 +268,7 @@ void MirrorFrame::getForecast()
 
 void MirrorFrame::sunrise(qint64 t)
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	QDateTime s;
 	s.setMSecsSinceEpoch(t * 1000);
 	m_sunrise->setText(QString("<center>%1</center>").arg(s.toString("hh:mm ap")));
@@ -256,6 +276,7 @@ void MirrorFrame::sunrise(qint64 t)
 
 void MirrorFrame::sunset(qint64 t)
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	QDateTime s;
 	s.setMSecsSinceEpoch(t * 1000);
 	m_sunset->setText(QString("<center>%1</center>").arg(s.toString("hh:mm ap")));
@@ -271,11 +292,13 @@ void MirrorFrame::currentTemperature(double temp)
 	temp = temp + 0.5;
 	int rounded = (int)temp;
 
+	qDebug() << __PRETTY_FUNCTION__;
 	m_currentTemp->setText(QString("<center>%1%2</center>").arg(rounded).arg(QChar(0260)));
 }
 
 void MirrorFrame::currentSkyConditions(QString sky)
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	m_currentSky->setText(QString("<center>%1</center>").arg(sky));
 }
 
@@ -284,6 +307,7 @@ void MirrorFrame::currentHumidity(double humidity)
 	humidity = humidity + 0.5;
 	int rounded = (int)humidity;
 
+	qDebug() << __PRETTY_FUNCTION__;
 	m_currentHumidity->setText(QString("<center>%1%</center>").arg(rounded));
 }
 
@@ -292,6 +316,7 @@ void MirrorFrame::currentWindSpeed(double speed)
 	speed = speed + 0.5;
 	int rounded = (int)speed;
 
+	qDebug() << __PRETTY_FUNCTION__;
 	m_currentWind->setText(QString("<center>%1 mph</center>").arg(rounded));
 }
 
@@ -302,11 +327,13 @@ void MirrorFrame::weatherDataError(QString)
 
 void MirrorFrame::forecastFinished()
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	m_forecastIndex = 0;
 }
 
 void MirrorFrame::currentConditionsFinished()
 {
+	qDebug() << __PRETTY_FUNCTION__;
 }
 
 void MirrorFrame::forecastEntry(QJsonObject jobj)
@@ -319,6 +346,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
 	QString sky;
 
 
+	qDebug() << __PRETTY_FUNCTION__;
 	qint64 secs = jobj["dt"].toInt();
 	secs *= 1000;
 	dt.setMSecsSinceEpoch(secs);
@@ -372,6 +400,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
 
 void MirrorFrame::getEvents()
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	QThread* thread = new QThread;
 	CalendarData *event = new CalendarData();
 	event->moveToThread(thread);
@@ -392,6 +421,7 @@ void MirrorFrame::calendarEventsError(QString)
 
 void MirrorFrame::calendarEventsDone()
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	m_newEventList = true;
 	update();
 }
@@ -401,6 +431,7 @@ void MirrorFrame::calendarEventsEvent(QString s)
 	if (m_newEventList)
 		deleteCalendarEventsList();
 
+	qDebug() << __PRETTY_FUNCTION__;
 	QLabel *lb = new QLabel(s, this);
 	QFont f("Roboto");
 	f.setPixelSize(25);

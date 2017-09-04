@@ -16,11 +16,13 @@ WeatherData::~WeatherData()
 
 void WeatherData::addZip(QString z)
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	m_zip = z;
 }
 
 void WeatherData::addAppID(QString a)
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	m_appID = a;
 }
 
@@ -29,6 +31,7 @@ void WeatherData::processCurrentWeather()
 	QUrl u("http://api.openweathermap.org/data/2.5/weather");
 	QUrlQuery query;
 
+	qDebug() << __PRETTY_FUNCTION__;
 	query.addQueryItem("appid", m_appID);
 	query.addQueryItem("zip", m_zip);
 	query.addQueryItem("units", "imperial");
@@ -42,6 +45,7 @@ void WeatherData::processForecast()
 	QUrl u("http://api.openweathermap.org/data/2.5/forecast/daily");
 	QUrlQuery query;
 
+	qDebug() << __PRETTY_FUNCTION__;
 	query.addQueryItem("appid", m_appID);
 	query.addQueryItem("zip", m_zip);
 	query.addQueryItem("units", "imperial");
@@ -54,6 +58,7 @@ void WeatherData::processForecast()
 
 void WeatherData::currentReplyFinished(QNetworkReply *reply)
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	if (reply->error()) {
 		qWarning() << __PRETTY_FUNCTION__ << ":" << reply->errorString();
 	}
@@ -80,6 +85,7 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 
 void WeatherData::forecastReplyFinished(QNetworkReply *reply)
 {
+	qDebug() << __PRETTY_FUNCTION__;
 	if (reply->error()) {
 		qWarning() << __PRETTY_FUNCTION__ << ":" << reply->errorString();
 	}

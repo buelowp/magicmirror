@@ -62,7 +62,7 @@ def main():
 
     now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
     eventsResult = service.events().list(
-        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
+        calendarId='primary', timeMin=now, maxResults=12, singleEvents=True,
         orderBy='startTime').execute()
     events = eventsResult.get('items', [])
 

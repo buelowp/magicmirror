@@ -23,12 +23,19 @@ signals:
 	void motionDetected();
 
 public slots:
-	void detected();
+	void detected(int);
 	void enable();
 
 private:
-	QFile *m_pin;
+	void setEdge(int);
+	void setDirection(int);
+	bool openValue(int);
+	bool openUEvent(int);
+
+	QFile *m_uevent;
+	QFile *m_value;
 	QSocketNotifier *m_notification;
+	char m_detectValue;
 };
 
 #endif /* MOTIONDETECT_H_ */

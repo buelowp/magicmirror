@@ -1,4 +1,4 @@
-EMPLATE = app
+TEMPLATE = app
 
 CONFIG += gui network debug core
 
@@ -11,9 +11,11 @@ SOURCES = MirrorFrame.cpp \
 	CalendarData.cpp \
 	WeatherData.cpp \
 	MotionDetect.cpp \
+	ds18b20.cpp \
 	main.cpp
 		
 HEADERS = MirrorFrame.h \
 	CalendarData.h \
 	WeatherData.h \
-	MotionDetect.h
+	MotionDetect.h \
+	ds18b20.h

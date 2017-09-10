@@ -21,6 +21,7 @@
 #include "CalendarData.h"
 #include "WeatherData.h"
 #include "MotionDetect.h"
+#include "ds18b20.h"
 
 #define MONITOR_TIMEOUT		(1000 * 60 * 15)
 #define CALEVENTS_TIMEOUT	(1000 * 60 * 60 * 1)
@@ -55,6 +56,7 @@ public slots:
 	void monitorOn();
 	void monitorOff();
 	void resetMonitorTimer();
+	void updateLocalTemp();
 
 signals:
 	void enableMotionDetect();
@@ -75,6 +77,7 @@ private:
 	QTimer *m_currentWeatherTimer;
 	QTimer *m_clockTimer;
 	QTimer *m_monitorTimer;
+	QTimer *m_localTempTimer;
 	QList<QLabel*> m_calendarEvents;
 	QLabel *m_calLabel;
 	QLabel *m_currentLabel;
@@ -92,10 +95,13 @@ private:
 	QLabel *m_sunriseLabel;
 	QLabel *m_sunsetLabel;
 	QLabel *m_clockLabel;
+	QLabel *m_localTempLabel;
+	QLabel *m_localTemp;
 	QVector<QLabel*> m_forecastEntries;
 	
 	MotionDetect *m_motionDetect;
-	
+	DS18B20 *m_ds18b20;
+
 	int m_calEventsY;
 	int m_forecastIndex;
 	bool m_newEventList;

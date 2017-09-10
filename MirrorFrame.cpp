@@ -7,9 +7,11 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_forecastTimer = new QTimer();
 	m_currentWeatherTimer = new QTimer();
 	m_clockTimer = new QTimer();
+	m_localTempTimer = new QTimer();
 	m_monitorTimer = new QTimer();
 	m_motionDetect = new MotionDetect();
 	m_monitorState = new QStateMachine(this);
+	m_ds18b20 = new DS18B20();
 	
 	connect(this, SIGNAL(enableMotionDetect()), m_motionDetect, SLOT(enable()));
 
@@ -29,7 +31,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	f.setBold(true);
 	m_calLabel->setGeometry(50, 10, 500, 100);
 	m_calLabel->setFont(f);
-	m_currentLabel->setGeometry(50, 1000, 500, 100);
+	m_currentLabel->setGeometry(50, 900, 500, 100);
 	m_currentLabel->setFont(f);
 	m_forecastLabel->setGeometry(50, 1400, 500, 100);
 	m_forecastLabel->setFont(f);
@@ -43,6 +45,11 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_currentHumidityLabel = new QLabel(this);
 	m_currentWindLabel = new QLabel(this);
 	m_currentSkyLabel = new QLabel(this);
+	m_localTempLabel = new QLabel(this);
+
+	m_localTempLabel->setGeometry(50, 1000, 350, 50);
+	m_localTempLabel->setFont(f);
+	m_localTempLabel->setText("<center>Inside Temperature</center>");
 
 	m_currentTempLabel = new QLabel(this);
 	m_currentTempLabel->setGeometry(50, 1100, 350, 50);
@@ -76,6 +83,10 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 
 	f.setPixelSize(25);
 	f.setBold(false);
+
+	m_localTemp = new QLabel(this);
+	m_localTemp->setGeometry(50, 1050, 350, 50);
+	m_localTemp->setFont(f);
 
 	m_currentTemp = new QLabel(this);
 	m_currentTemp->setGeometry(50, 1150, 350, 50);
@@ -118,6 +129,12 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	if (!m_motionDetect->open(17)) {
 		qWarning() << __PRETTY_FUNCTION__ << ": Unable to open GPIO 17";
 	}
+
+	qDebug() << __PRETTY_FUNCTION__ << ":" << __LINE__;
+	if (!m_ds18b20->open("/sys/devices/w1_bus_master1/28-00000829420c/w1_slave")) {
+		qWarning() << __PRETTY_FUNCTION__ << ": Unable top open 1 wire bus";
+	}
+	updateLocalTemp();
 }
 
 MirrorFrame::~MirrorFrame()
@@ -160,7 +177,19 @@ void MirrorFrame::enableTimers()
 	connect(m_clockTimer, SIGNAL(timeout()), this, SLOT(updateClock()));
 	m_clockTimer->start(1000);					// Update the clock 1x a second
 
+	connect(m_localTempTimer, SIGNAL(timeout()), this, SLOT(updateLocalTemp()));
+	m_localTempTimer->start(1000 * 60);
+
 	m_monitorTimer->start(MONITOR_TIMEOUT);
+}
+
+void MirrorFrame::updateLocalTemp()
+{
+	float temp;
+	m_ds18b20->read();
+	temp = m_ds18b20->tempF();
+	temp = temp + .5;
+	m_localTemp->setText(QString("<center>%1%2</center>").arg((int)temp).arg(QChar(0260)));
 }
 
 void MirrorFrame::resetMonitorTimer()

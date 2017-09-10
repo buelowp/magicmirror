@@ -9,6 +9,7 @@
 
 MotionDetect::MotionDetect(QObject *parent) : QObject(parent)
 {
+	m_detectValue = 0;
 }
 
 MotionDetect::~MotionDetect()
@@ -64,6 +65,7 @@ bool MotionDetect::openValue(int pin)
 	m_value->read(&state, 1);
 	m_value->seek(0);
 	qDebug() << __PRETTY_FUNCTION__ << ": opened" << value << "with contents" << state;
+	m_detectValue = state;
 	return true;
 }
 
@@ -100,16 +102,21 @@ void MotionDetect::close()
 void MotionDetect::detected(int)
 {
 	char value;
+	QByteArray data;
+	int state;
 
 	if (!m_value->isOpen())
 		qDebug() << __PRETTY_FUNCTION__ << ": m_value is not open";
 	else {
-		m_value->read(&value, 1); 
 		m_value->seek(0);
-		if (m_detectValue != value) {
-			m_detectValue = value;
-			if (value == '1') {
-				qDebug() << __PRETTY_FUNCTION__ << value;
+		data = m_value->readAll();
+		if (data.size()) {
+			state = data.trimmed().toInt();
+		}
+		if (m_detectValue != state) {
+			m_detectValue = state;
+			if (state == 1) {
+				qDebug() << __PRETTY_FUNCTION__ << state;
 				emit motionDetected();
 			}
 		}

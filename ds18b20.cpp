@@ -32,25 +32,31 @@ void DS18B20::close()
 
 void DS18B20::read()
 {
-	std::string results;
-	char *buff;
-	int length = 0;
-	unsigned int index = 0;
+	char buff[128];
+	std::string data;
+	bool bFoundCrcOk=false;
 
-    m_device.seekg(0, m_device.end);
-    length = m_device.tellg();
-    m_device.seekg(0, m_device.beg);
+	static const std::string tag("t=");
 
-    buff = new char[length];
-    m_device.read(buff, length);
-	qDebug() << __PRETTY_FUNCTION__ << ": file size is" << length;
-    results = buff;
+	if (m_device.is_open()) {
+		std::string sLine;
+		while (!m_device.eof()) {
+			m_device.getline(buff, 128);
+			sLine = buff;
+			int tpos;
+			if (sLine.find("crc=")!=std::string::npos) {
+				if (sLine.find("YES")!=std::string::npos)
+					bFoundCrcOk=true;
+			}
+			else if ((tpos=sLine.find(tag))!=std::string::npos) {
+				data = sLine.substr(tpos+tag.length());
+			}
+		}
+	}
 
-    if ((index = results.find("t=")) != std::string::npos) {
-    	std::string val = results.substr(index + 2, 5);
-    	m_value = std::stof(val);
-	qDebug() << __PRETTY_FUNCTION__ << ": m_value = " << m_value;
-    }
+	if (bFoundCrcOk) {
+		m_value = std::atof(data.c_str());
+	}
 }
 
 float DS18B20::tempC()

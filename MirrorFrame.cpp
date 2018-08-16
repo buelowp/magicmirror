@@ -180,9 +180,14 @@ void MirrorFrame::enableTimers()
 
 void MirrorFrame::updateLocalTemp()
 {
-	float temp = 0.0;
-	temp = temp + .5;
-	m_localTemp->setText(QString("<center>%1%2</center>").arg((int)temp).arg(QChar(0260)));
+	double t = 0.0;
+	double h = 0.0;
+
+	if (getValues(&t, &h) == 0) {
+		m_temperature = t;
+		m_humidity = h;
+	}
+	m_localTemp->setText(QString("<center>%1%2</center>").arg(m_temperature).arg(QChar(0260)));
 }
 
 void MirrorFrame::resetMonitorTimer()
@@ -309,11 +314,8 @@ void MirrorFrame::weatherEventsDone()
 
 void MirrorFrame::currentTemperature(double temp)
 {
-	temp = temp + 0.5;
-	int rounded = (int)temp;
-
 	qDebug() << __PRETTY_FUNCTION__;
-	m_currentTemp->setText(QString("<center>%1%2</center>").arg(rounded).arg(QChar(0260)));
+	m_currentTemp->setText(QString("<center>%1%2</center>").arg(temp).arg(QChar(0260)));
 }
 
 void MirrorFrame::currentSkyConditions(QString sky)
@@ -324,11 +326,8 @@ void MirrorFrame::currentSkyConditions(QString sky)
 
 void MirrorFrame::currentHumidity(double humidity)
 {
-	humidity = humidity + 0.5;
-	int rounded = (int)humidity;
-
 	qDebug() << __PRETTY_FUNCTION__;
-	m_currentHumidity->setText(QString("<center>%1%</center>").arg(rounded));
+	m_currentHumidity->setText(QString("<center>%1%</center>").arg(humidity));
 }
 
 void MirrorFrame::currentWindSpeed(double speed)

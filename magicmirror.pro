@@ -6,7 +6,7 @@ QT += widgets network
 
 OBJECTS_DIR = .obj
 MOC_DIR = .moc
-LIBS = -lwiringPi
+LIBS = -lwiringPi -lth02
 
 SOURCES = MirrorFrame.cpp \
 	CalendarData.cpp \

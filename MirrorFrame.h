@@ -18,6 +18,7 @@
 #include <QtNetwork/QtNetwork>
 #include <QtCore/QtCore>
 #include <QtWidgets/QtWidgets>
+#include <th02.h>
 #include "CalendarData.h"
 #include "WeatherData.h"
 
@@ -96,12 +97,16 @@ private:
 	QLabel *m_clockLabel;
 	QLabel *m_localTempLabel;
 	QLabel *m_localTemp;
+	QLabel *m_localHumidityLabel;
+	QLabel *m_localHumidity;
 	QVector<QLabel*> m_forecastEntries;
 	
 	int m_calEventsY;
 	int m_forecastIndex;
 	bool m_newEventList;
 	bool m_resetForecastTimer;
+	double m_humidity;
+	double m_temperature;
 };
 
 #endif /* __MIRRORFRAME_H__ */

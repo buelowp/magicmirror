@@ -20,8 +20,6 @@
 #include <QtWidgets/QtWidgets>
 #include "CalendarData.h"
 #include "WeatherData.h"
-#include "MotionDetect.h"
-#include "ds18b20.h"
 
 #define MONITOR_TIMEOUT		(1000 * 60 * 15)
 #define CALEVENTS_TIMEOUT	(1000 * 60 * 60 * 1)
@@ -33,6 +31,7 @@ class MirrorFrame : public QFrame {
 public:
 	MirrorFrame(QFrame *parent = 0);
 	virtual ~MirrorFrame();
+	void registerTouchEvent();
 
 public slots:
 	void getEvents();
@@ -59,7 +58,7 @@ public slots:
 	void updateLocalTemp();
 
 signals:
-	void enableMotionDetect();
+	void touchDetected();
 
 //protected:
 //	void showEvent(QShowEvent*);
@@ -99,9 +98,6 @@ private:
 	QLabel *m_localTemp;
 	QVector<QLabel*> m_forecastEntries;
 	
-	MotionDetect *m_motionDetect;
-	DS18B20 *m_ds18b20;
-
 	int m_calEventsY;
 	int m_forecastIndex;
 	bool m_newEventList;

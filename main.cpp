@@ -13,7 +13,10 @@
 */
 
 #include <QApplication>
+#include <wiringPi.h>
 #include "MirrorFrame.h"
+
+MirrorFrame *frame = NULL;
 
 void printFonts()
 {
@@ -28,13 +31,23 @@ void printFonts()
      }
 }
 
+void touchEvent(void) {
+	if (frame)
+		frame->registerTouchEvent();
+}
+
+
 int main(int argc, char **argv)
 {
-    QApplication app (argc, argv);
-    MirrorFrame *frame;
+	QApplication app (argc, argv);
 
 //    printFonts();
 
+        wiringPiSetupGpio();
+
+        pinMode(12, INPUT);
+
+        wiringPiISR(12, INT_EDGE_FALLING, &touchEvent);
 
 	frame = new MirrorFrame();
     	frame->setGeometry(0, 0, 1280, 1920);
@@ -43,6 +56,6 @@ int main(int argc, char **argv)
 	frame->getForecast();
 	frame->show();
 
-    return app.exec();
+	return app.exec();
 }
 

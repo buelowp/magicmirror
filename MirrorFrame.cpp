@@ -9,12 +9,8 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_clockTimer = new QTimer();
 	m_localTempTimer = new QTimer();
 	m_monitorTimer = new QTimer();
-	m_motionDetect = new MotionDetect();
 	m_monitorState = new QStateMachine(this);
-	m_ds18b20 = new DS18B20();
 	
-	connect(this, SIGNAL(enableMotionDetect()), m_motionDetect, SLOT(enable()));
-
 	QPalette pal(QColor(0,0,0));
 	setBackgroundRole(QPalette::Window);
 	pal.setColor(QPalette::Window, Qt::black);
@@ -126,14 +122,8 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	
 	createStateMachine();
 	enableTimers();
-	if (!m_motionDetect->open(17)) {
-		qWarning() << __PRETTY_FUNCTION__ << ": Unable to open GPIO 17";
-	}
 
 	qDebug() << __PRETTY_FUNCTION__ << ":" << __LINE__;
-	if (!m_ds18b20->open("/sys/devices/w1_bus_master1/28-00000829420c/w1_slave")) {
-		qWarning() << __PRETTY_FUNCTION__ << ": Unable top open 1 wire bus";
-	}
 	updateLocalTemp();
 }
 
@@ -141,16 +131,21 @@ MirrorFrame::~MirrorFrame()
 {
 }
 
+void MirrorFrame::registerTouchEvent()
+{
+	emit touchDetected();
+}
+
 void MirrorFrame::createStateMachine()
 {
 	QState *on = new QState();
 	QState *off = new QState();
 	
-	off->addTransition(m_motionDetect, SIGNAL(motionDetected()), on);
+	off->addTransition(this, SIGNAL(touchDetected()), on);
 	on->addTransition(m_monitorTimer, SIGNAL(timeout()), off);
 	connect(on, SIGNAL(entered()), this, SLOT(monitorOn()));
 	connect(off, SIGNAL(entered()), this, SLOT(monitorOff()));
-	connect(m_motionDetect, SIGNAL(motionDetected()), this, SLOT(resetMonitorTimer()));
+	connect(this, SIGNAL(touchDetected()), this, SLOT(resetMonitorTimer()));
 	m_monitorState->addState(on);
 	m_monitorState->addState(off);
 	m_monitorState->setInitialState(on);
@@ -185,9 +180,7 @@ void MirrorFrame::enableTimers()
 
 void MirrorFrame::updateLocalTemp()
 {
-	float temp;
-	m_ds18b20->read();
-	temp = m_ds18b20->tempF();
+	float temp = 0.0;
 	temp = temp + .5;
 	m_localTemp->setText(QString("<center>%1%2</center>").arg((int)temp).arg(QChar(0260)));
 }
@@ -207,8 +200,6 @@ void MirrorFrame::monitorOff()
 	turnMonitorOff();
 	if (m_monitorTimer->isActive())
 		m_monitorTimer->stop();
-
-	emit enableMotionDetect();
 }
 
 void MirrorFrame::monitorOn()

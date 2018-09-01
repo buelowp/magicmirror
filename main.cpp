@@ -32,6 +32,7 @@ void printFonts()
 }
 
 void touchEvent(void) {
+	qDebug() << "Touch event registered";
 	if (frame)
 		frame->registerTouchEvent();
 }
@@ -49,6 +50,8 @@ int main(int argc, char **argv)
 
         wiringPiISR(12, INT_EDGE_FALLING, &touchEvent);
 
+	QCursor cursor(Qt::BlankCursor);
+	QApplication::setOverrideCursor(cursor);
 	frame = new MirrorFrame();
     	frame->setGeometry(0, 0, 1280, 1920);
 	frame->getEvents();

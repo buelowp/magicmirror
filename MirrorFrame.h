@@ -22,7 +22,7 @@
 #include "CalendarData.h"
 #include "WeatherData.h"
 
-#define MONITOR_TIMEOUT		(1000 * 60 * 15)
+#define MONITOR_TIMEOUT		(1000 * 60 * 1)
 #define CALEVENTS_TIMEOUT	(1000 * 60 * 60 * 1)
 #define FORECAST_TIMEOUT	(1000 * 60 * 60 * 12)
 #define CURRENT_TIMEOUT		(1000 * 60 * 60 * 1)

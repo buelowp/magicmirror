@@ -14,15 +14,17 @@ WeatherData::~WeatherData()
 }
 
 
-void WeatherData::addZip(QString z)
+void WeatherData::addZip(QString z, QString c)
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	m_zip = z;
+	m_zip += ",";
+	m_zip += c;
+	qDebug() << __PRETTY_FUNCTION__ << ":" << m_zip;
 }
 
 void WeatherData::addAppID(QString a)
 {
-	qDebug() << __PRETTY_FUNCTION__;
+	qDebug() << __PRETTY_FUNCTION__ << ":" << a;
 	m_appID = a;
 }
 

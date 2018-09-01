@@ -11,7 +11,7 @@ public:
 	WeatherData(QObject *parent = 0);
 	virtual ~WeatherData();
 
-	void addZip(QString);
+	void addZip(QString, QString);
 	void addAppID(QString);
 
 signals:

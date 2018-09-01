@@ -19,7 +19,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 
 	m_calLabel = new QLabel("<font color='white'>Upcoming Events", this);
 	m_forecastLabel = new QLabel("<font color='white'>Local Forecast</font>", this);
-	m_currentLabel = new QLabel("<font color='white'>Outside Conditions</font>", this);
+	m_currentLabel = new QLabel("<font color='white'>Current Conditions</font>", this);
 	m_clockLabel = new QLabel(this);
 
 	QFont f("Roboto");
@@ -27,7 +27,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	f.setBold(true);
 	m_calLabel->setGeometry(50, 10, 500, 100);
 	m_calLabel->setFont(f);
-	m_currentLabel->setGeometry(50, 900, 500, 100);
+	m_currentLabel->setGeometry(50, 900, 600, 100);
 	m_currentLabel->setFont(f);
 	m_forecastLabel->setGeometry(50, 1400, 500, 100);
 	m_forecastLabel->setFont(f);
@@ -42,10 +42,14 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_currentWindLabel = new QLabel(this);
 	m_currentSkyLabel = new QLabel(this);
 	m_localTempLabel = new QLabel(this);
+	m_localHumidityLabel = new QLabel(this);
 
 	m_localTempLabel->setGeometry(50, 1000, 350, 50);
+	m_localHumidityLabel->setGeometry(400, 1000, 350, 50);
 	m_localTempLabel->setFont(f);
+	m_localHumidityLabel->setFont(f);
 	m_localTempLabel->setText("<center>Inside Temperature</center>");
+	m_localHumidityLabel->setText("<center>Inside Humidity</center>");
 
 	m_currentTempLabel = new QLabel(this);
 	m_currentTempLabel->setGeometry(50, 1100, 350, 50);
@@ -83,6 +87,10 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_localTemp = new QLabel(this);
 	m_localTemp->setGeometry(50, 1050, 350, 50);
 	m_localTemp->setFont(f);
+
+	m_localHumidity = new QLabel(this);
+	m_localHumidity->setGeometry(400, 1050, 350, 50);
+	m_localHumidity->setFont(f);
 
 	m_currentTemp = new QLabel(this);
 	m_currentTemp->setGeometry(50, 1150, 350, 50);
@@ -170,7 +178,7 @@ void MirrorFrame::enableTimers()
 	m_currentWeatherTimer->start(CURRENT_TIMEOUT);	// get current weather conditions once an hour
 	
 	connect(m_clockTimer, SIGNAL(timeout()), this, SLOT(updateClock()));
-	m_clockTimer->start(1000);					// Update the clock 1x a second
+	m_clockTimer->start(500);					// Update the clock 1x a second
 
 	connect(m_localTempTimer, SIGNAL(timeout()), this, SLOT(updateLocalTemp()));
 	m_localTempTimer->start(1000 * 60);
@@ -187,7 +195,9 @@ void MirrorFrame::updateLocalTemp()
 		m_temperature = t;
 		m_humidity = h;
 	}
-	m_localTemp->setText(QString("<center>%1%2</center>").arg(m_temperature).arg(QChar(0260)));
+	qDebug() << __PRETTY_FUNCTION__ << ": temp: " << m_temperature << ", humidity: " << m_humidity;
+	m_localTemp->setText(QString("<center>%1%2</center>").arg(m_temperature, 0, 'f', 1).arg(QChar(0260)));
+	m_localHumidity->setText(QString("<center>%1%</center>").arg(m_humidity, 0, 'f', 1));
 }
 
 void MirrorFrame::resetMonitorTimer()
@@ -249,7 +259,7 @@ void MirrorFrame::getCurrentWeather()
 	qDebug() << __PRETTY_FUNCTION__;
 	QThread* thread = new QThread;
 	WeatherData *event = new WeatherData();
-	event->addZip("60005");
+	event->addZip(settings.value("zip").toString(), settings.value("country").toString());
 	event->addAppID(settings.value("appid").toString());
 	event->moveToThread(thread);
 	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
@@ -275,7 +285,7 @@ void MirrorFrame::getForecast()
 	qDebug() << __PRETTY_FUNCTION__;
 	QThread* thread = new QThread;
 	WeatherData *event = new WeatherData();
-	event->addZip("60005");
+	event->addZip(settings.value("zip").toString(), settings.value("country").toString());
 	event->addAppID(settings.value("appid").toString());
 	event->moveToThread(thread);
 	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
@@ -315,7 +325,7 @@ void MirrorFrame::weatherEventsDone()
 void MirrorFrame::currentTemperature(double temp)
 {
 	qDebug() << __PRETTY_FUNCTION__;
-	m_currentTemp->setText(QString("<center>%1%2</center>").arg(temp).arg(QChar(0260)));
+	m_currentTemp->setText(QString("<center>%1%2</center>").arg(temp, 0, 'f', 1).arg(QChar(0260)));
 }
 
 void MirrorFrame::currentSkyConditions(QString sky)

@@ -1,2 +1,6 @@
-# My magic mirror implemetation for google calendar
+# My Magic Mirror
+
+Magic Mirror with Google Calendar, Weather, and Google Assistant.
+
+ 
 

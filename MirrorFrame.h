@@ -1,15 +1,15 @@
 /*
-    This file is part of MythClock.
-    MythClock is free software: you can redistribute it and/or modify
+    This file is part of MagicMirror.
+    MagicMirror is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
-    MythClock is distributed in the hope that it will be useful,
+    MagicMirror is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
     You should have received a copy of the GNU General Public License
-    along with MythClock.  If not, see <http://www.gnu.org/licenses/>.
+    along with MagicMirror.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #ifndef __MIRRORFRAME_H__
@@ -57,6 +57,8 @@ public slots:
 	void monitorOff();
 	void resetMonitorTimer();
 	void updateLocalTemp();
+	void assistantDied(int, QProcess::ExitStatus);
+	void assistantError(QProcess::ProcessError);
 
 signals:
 	void touchDetected();
@@ -70,6 +72,7 @@ private:
 	void enableTimers();
 	void turnMonitorOn();
 	void turnMonitorOff();
+	void startGoogleAssistant();
 
 	QStateMachine *m_monitorState;
 	QTimer *m_calendarTimer;
@@ -100,6 +103,7 @@ private:
 	QLabel *m_localHumidityLabel;
 	QLabel *m_localHumidity;
 	QVector<QLabel*> m_forecastEntries;
+	QProcess *m_assistant;
 	
 	int m_calEventsY;
 	int m_forecastIndex;

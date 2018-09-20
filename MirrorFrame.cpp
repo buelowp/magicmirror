@@ -10,6 +10,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_localTempTimer = new QTimer();
 	m_monitorTimer = new QTimer();
 	m_monitorState = new QStateMachine(this);
+	m_assistant = new QProcess(this);
 	
 	QPalette pal(QColor(0,0,0));
 	setBackgroundRole(QPalette::Window);
@@ -128,10 +129,12 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_newEventList = false;
 	m_resetForecastTimer = true;
 	
+	connect(m_assistant, SIGNAL(errorOccurred(QProcess::ProcessError)), this, SLOT(assistantError(QProcess::ProcessError)));
+	connect(m_assistant, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(assistantDied(int, QProcess::ExitStatus)));
 	createStateMachine();
 	enableTimers();
 
-	qDebug() << __PRETTY_FUNCTION__ << ":" << __LINE__;
+	startGoogleAssistant();
 	updateLocalTemp();
 }
 
@@ -142,6 +145,28 @@ MirrorFrame::~MirrorFrame()
 void MirrorFrame::registerTouchEvent()
 {
 	emit touchDetected();
+}
+
+void MirrorFrame::startGoogleAssistant()
+{
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
+
+	QString program = settings.value("assistant").toString();
+	QStringList args;
+	args << "--project_id" << settings.value("project_id").toString();
+	args << "--device_model_id" << settings.value("device_model_id").toString();
+
+	m_assistant->start(program, args);
+}
+
+void MirrorFrame::assistantDied(int code, QProcess::ExitStatus status)
+{
+	qDebug() << __PRETTY_FUNCTION__ << ": Google Assitant exited with code " << code << "and status" << status;
+}
+
+void MirrorFrame::assistantError(QProcess::ProcessError error)
+{
+	qDebug() << __PRETTY_FUNCTION__ << ": Google Assistant failed with error: " << error;
 }
 
 void MirrorFrame::createStateMachine()
@@ -162,6 +187,8 @@ void MirrorFrame::createStateMachine()
 
 void MirrorFrame::enableTimers()
 {
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
+	int monitorTimeout = settings.value("screentimeout").toInt();
 	QDateTime now = QDateTime::currentDateTime();
 	QDateTime midnight;
 	QDate tomorrow(now.date().year(), now.date().month(), now.date().day());
@@ -183,7 +210,13 @@ void MirrorFrame::enableTimers()
 	connect(m_localTempTimer, SIGNAL(timeout()), this, SLOT(updateLocalTemp()));
 	m_localTempTimer->start(1000 * 60);
 
-	m_monitorTimer->start(MONITOR_TIMEOUT);
+	if (monitorTimeout == 0)
+		monitorTimeout = MONITOR_TIMEOUT;
+	else
+		monitorTimeout = monitorTimeout * 1000 * 60;
+
+	qDebug() << __PRETTY_FUNCTION__ << ": setting monitor timeout to" << monitorTimeout;
+	m_monitorTimer->start(monitorTimeout);
 }
 
 void MirrorFrame::updateLocalTemp()

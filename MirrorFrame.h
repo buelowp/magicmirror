@@ -57,8 +57,6 @@ public slots:
 	void monitorOff();
 	void resetMonitorTimer();
 	void updateLocalTemp();
-	void assistantDied(int, QProcess::ExitStatus);
-	void assistantError(QProcess::ProcessError);
 
 signals:
 	void touchDetected();
@@ -72,7 +70,6 @@ private:
 	void enableTimers();
 	void turnMonitorOn();
 	void turnMonitorOff();
-	void startGoogleAssistant();
 
 	QStateMachine *m_monitorState;
 	QTimer *m_calendarTimer;
@@ -103,7 +100,6 @@ private:
 	QLabel *m_localHumidityLabel;
 	QLabel *m_localHumidity;
 	QVector<QLabel*> m_forecastEntries;
-	QProcess *m_assistant;
 	
 	int m_calEventsY;
 	int m_forecastIndex;

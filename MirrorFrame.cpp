@@ -10,7 +10,6 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_localTempTimer = new QTimer();
 	m_monitorTimer = new QTimer();
 	m_monitorState = new QStateMachine(this);
-	m_assistant = new QProcess(this);
 	
 	QPalette pal(QColor(0,0,0));
 	setBackgroundRole(QPalette::Window);
@@ -129,12 +128,9 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_newEventList = false;
 	m_resetForecastTimer = true;
 	
-	connect(m_assistant, SIGNAL(errorOccurred(QProcess::ProcessError)), this, SLOT(assistantError(QProcess::ProcessError)));
-	connect(m_assistant, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(assistantDied(int, QProcess::ExitStatus)));
 	createStateMachine();
 	enableTimers();
 
-	startGoogleAssistant();
 	updateLocalTemp();
 }
 
@@ -145,28 +141,6 @@ MirrorFrame::~MirrorFrame()
 void MirrorFrame::registerTouchEvent()
 {
 	emit touchDetected();
-}
-
-void MirrorFrame::startGoogleAssistant()
-{
-        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
-
-	QString program = settings.value("assistant").toString();
-	QStringList args;
-	args << "--project_id" << settings.value("project_id").toString();
-	args << "--device_model_id" << settings.value("device_model_id").toString();
-
-	m_assistant->start(program, args);
-}
-
-void MirrorFrame::assistantDied(int code, QProcess::ExitStatus status)
-{
-	qDebug() << __PRETTY_FUNCTION__ << ": Google Assitant exited with code " << code << "and status" << status;
-}
-
-void MirrorFrame::assistantError(QProcess::ProcessError error)
-{
-	qDebug() << __PRETTY_FUNCTION__ << ": Google Assistant failed with error: " << error;
 }
 
 void MirrorFrame::createStateMachine()
@@ -406,7 +380,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
 	double high;
 	double low;
 	QString sky;
-
+    int index = 0;
 
 	qDebug() << __PRETTY_FUNCTION__;
 	qint64 secs = jobj["dt"].toInt();
@@ -424,7 +398,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
 			sky.append(" Skies");
 	}
 
-	QLabel *lb = m_forecastEntries[m_forecastIndex++];
+    QLabel *lb = m_forecastEntries[index++];
 	if (now.date() == dt.date()) {
 		QString text = QString("Today will see %1 with a high of %2%3, a low of %4%5")
 			.arg(sky)

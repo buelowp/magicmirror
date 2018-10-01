@@ -13,7 +13,6 @@ WeatherData::~WeatherData()
 {
 }
 
-
 void WeatherData::addZip(QString z, QString c)
 {
 	m_zip = z;

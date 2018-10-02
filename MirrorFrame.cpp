@@ -127,6 +127,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_forecastIndex = 0;
 	m_newEventList = false;
 	m_resetForecastTimer = true;
+    m_forecastEntryCount = 0;
 	
 	createStateMachine();
 	enableTimers();
@@ -161,7 +162,7 @@ void MirrorFrame::createStateMachine()
 
 void MirrorFrame::enableTimers()
 {
-        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
 	int monitorTimeout = settings.value("screentimeout").toInt();
 	QDateTime now = QDateTime::currentDateTime();
 	QDateTime midnight;
@@ -198,11 +199,13 @@ void MirrorFrame::updateLocalTemp()
 	double t = 0.0;
 	double h = 0.0;
 
+#ifdef __LOCAL_TEMP__
 	if (getValues(&t, &h) == 0) {
 		m_temperature = t;
 		m_humidity = h;
 	}
 	qDebug() << __PRETTY_FUNCTION__ << ": temp: " << m_temperature << ", humidity: " << m_humidity;
+#endif
 	m_localTemp->setText(QString("<center>%1%2</center>").arg(m_temperature, 0, 'f', 1).arg(QChar(0260)));
 	m_localHumidity->setText(QString("<center>%1%</center>").arg(m_humidity, 0, 'f', 1));
 }
@@ -282,6 +285,7 @@ void MirrorFrame::getCurrentWeather()
 	connect(event, SIGNAL(skyConditions(QString)), this, SLOT(currentSkyConditions(QString)));
 	connect(event, SIGNAL(sunrise(qint64)), this, SLOT(sunrise(qint64)));
 	connect(event, SIGNAL(sunset(qint64)), this, SLOT(sunset(qint64)));
+    connect(event, SIGNAL(forecastEntryCount(int)), this, SLOT(forecastEntryCount(int)));
 	thread->start();
 }
 
@@ -303,6 +307,7 @@ void MirrorFrame::getForecast()
 	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 	connect(thread, SIGNAL(started()), event, SLOT(processForecast()));
 	connect(event, SIGNAL(forecastEntry(QJsonObject)), this, SLOT(forecastEntry(QJsonObject)));
+    connect(event, SIGNAL(forecastEntryCount(int)), this, SLOT(forecastEntryCount(int)));
 	thread->start();
 	m_resetForecastTimer = false;
 	m_forecastTimer->setInterval(FORECAST_TIMEOUT);		// Run the forecaster every 12 hours
@@ -372,66 +377,97 @@ void MirrorFrame::currentConditionsFinished()
 	qDebug() << __PRETTY_FUNCTION__;
 }
 
+void MirrorFrame::forecastEntryCount(int c)
+{
+    m_forecastEntryCount = c;
+    m_forecastIndex = 0;
+    qDebug() << __PRETTY_FUNCTION__ << ": There are" << m_forecastEntryCount << "responses in the forecast";
+}
+
 void MirrorFrame::forecastEntry(QJsonObject jobj)
 {
-	QDateTime dt;
-	QDateTime now = QDateTime::currentDateTime();
-	int humidity;
-	double high;
-	double low;
-	QString sky;
-    int index = 0;
+    QDateTime dt;
+    QDateTime now = QDateTime::currentDateTime();
+    int humidity;
+    double high;
+    double low;
+    double wind;
+    QString sky;
 
-	qDebug() << __PRETTY_FUNCTION__;
-	qint64 secs = jobj["dt"].toInt();
-	secs *= 1000;
-	dt.setMSecsSinceEpoch(secs);
-	humidity = jobj["humidity"].toInt();
-	QJsonObject temp = jobj["temp"].toObject();
-	high = temp["max"].toDouble() + 0.5;
-	low = temp["min"].toDouble() + 0.5;
-	QJsonArray weather = jobj["weather"].toArray();
-	for (int i = 0; i < weather.size(); ++i) {
-		QJsonObject obj = weather[i].toObject();
-		sky = obj["main"].toString();
-		if (sky == "Clear")
-			sky.append(" Skies");
-	}
+    qDebug() << __PRETTY_FUNCTION__ << jobj;
+    qint64 secs = jobj["dt"].toInt();
+    secs *= 1000;
+    dt.setMSecsSinceEpoch(secs);
+    humidity = jobj["humidity"].toInt();
+    QJsonObject temp = jobj["temp"].toObject();
+    high = temp["max"].toDouble() + 0.5;
+    low = temp["min"].toDouble() + 0.5;
+    wind = jobj["speed"].toDouble();
+    
+    QJsonArray weather = jobj["weather"].toArray();
+    for (int i = 0; i < weather.size(); ++i) {
+        QJsonObject obj = weather[i].toObject();
+        sky = obj["main"].toString();
+    }
 
-    QLabel *lb = m_forecastEntries[index++];
-	if (now.date() == dt.date()) {
-		QString text = QString("Today will see %1 with a high of %2%3, a low of %4%5")
-			.arg(sky)
-			.arg((int)high)
-			.arg(QChar(0260))
-			.arg((int)low)
-			.arg(QChar(0260));
+    QLabel *lb = m_forecastEntries[m_forecastIndex++];
+    if (now.date() == dt.date()) {
+        QString text = QString("Today high: %1%2, low: %3%4, %5")
+            .arg((int)high)
+            .arg(QChar(0260))
+            .arg((int)low)
+            .arg(QChar(0260))
+            .arg(sky);
 
-		if (humidity > 75) {
-			text.append(", and may feel humid");
-		}
-		else if (humidity < 55) {
-			text.append(", and should feel dry");
-		}
-		lb->setText(text);
-	}
-	else {
-		QString text = QString("%1 will see %2 with a high of %3%4, a low of %5%6")
-			.arg(dt.toString("MMM d"))
-			.arg(sky)
-			.arg((int)high)
-			.arg(QChar(0260))
-			.arg((int)low)
-			.arg(QChar(0260));
+        if (wind <= 5.0) {
+            text.append(", calm");
+        }
+        else if (wind <= 10.0) {
+            text.append(", breezy");
+        }
+        else if (wind < 15.0) {
+            text.append(", windy");
+        }
+        else {
+            text.append(", very windy");
+        }
+        if (humidity > 75) {
+            text.append(" and very humid");
+        }
+        else if (humidity < 55) {
+            text.append(" feeling dry");
+        }
+        lb->setText(text);
+    }
+    else {
+        QString text = QString("%1: high: %2%3, low: %4%5: %6")
+            .arg(dt.toString("MMM d"))
+            .arg((int)high)
+            .arg(QChar(0260))
+            .arg((int)low)
+            .arg(QChar(0260))
+            .arg(sky);
 
-		if (humidity > 75) {
-			text.append(", and may feel humid");
-		}
-		else if (humidity < 55) {
-			text.append(", and should feel dry");
-		}
-		lb->setText(text);
-	}
+        if (wind <= 5.0) {
+            text.append(", calm");
+        }
+        else if (wind <= 10.0) {
+            text.append(", breezy");
+        }
+        else if (wind < 15.0) {
+            text.append(", windy");
+        }
+        else {
+            text.append(", very windy");
+        }
+        if (humidity > 75) {
+            text.append(" and very humid");
+        }
+        else if (humidity < 55) {
+            text.append(" feeling dry");
+        }
+        lb->setText(text);
+    }
 }
 
 void MirrorFrame::getEvents()
@@ -480,13 +516,13 @@ void MirrorFrame::calendarEventsEvent(QString s)
 
 void MirrorFrame::deleteCalendarEventsList()
 {
-	qDebug() << __PRETTY_FUNCTION__ << ": clearing out list";
-	for (int i = 0; i < m_calendarEvents.size(); i++) {
-		QLabel *lb = m_calendarEvents.at(i);
-		lb->hide();
-		delete lb;
-	}
-	m_calendarEvents.clear();
-	m_newEventList = false;
-	m_calEventsY = 110;
+    qDebug() << __PRETTY_FUNCTION__ << ": clearing out list";
+    for (int i = 0; i < m_calendarEvents.size(); i++) {
+        QLabel *lb = m_calendarEvents.at(i);
+        lb->hide();
+        delete lb;
+    }
+    m_calendarEvents.clear();
+    m_newEventList = false;
+    m_calEventsY = 110;
 }

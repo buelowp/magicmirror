@@ -13,52 +13,60 @@
 */
 
 #include <QApplication>
+
+#ifdef __WIRING_PI__
 #include <wiringPi.h>
+#endif
+
 #include "MirrorFrame.h"
 
 MirrorFrame *frame = NULL;
 
 void printFonts()
 {
-     QFontDatabase database;
+    QFontDatabase database;
 
-     foreach (const QString &family, database.families()) {
-    	 qDebug() << "Family:" << family;
-
-         foreach (const QString &style, database.styles(family)) {
-        	 qDebug() << " Style:" << style;
-         }
-     }
+    foreach (const QString &family, database.families()) {
+        qDebug() << "Family:" << family;
+        foreach (const QString &style, database.styles(family)) {
+            qDebug() << " Style:" << style;
+        }
+    }
 }
 
 void touchEvent(void) {
-	qDebug() << "Touch event registered";
-	if (frame)
-		frame->registerTouchEvent();
+    qDebug() << "Touch event registered";
+    if (frame)
+        frame->registerTouchEvent();
 }
 
+void setupTouchEvents()
+{
+#ifdef __WIRING_PI__
+    wiringPiSetupGpio();
+    pinMode(12, INPUT);
+    wiringPiISR(12, INT_EDGE_FALLING, &touchEvent);
+#endif
+}
 
 int main(int argc, char **argv)
 {
-	QApplication app (argc, argv);
+    QApplication app (argc, argv);
 
-//    printFonts();
+#ifdef __PRINT_FONTS__
+    printFonts();
+#endif
 
-        wiringPiSetupGpio();
+    setupTouchEvents();
+    QCursor cursor(Qt::BlankCursor);
+    QApplication::setOverrideCursor(cursor);
+    frame = new MirrorFrame();
+    frame->setGeometry(0, 0, 1280, 1920);
+    frame->getEvents();
+    frame->getCurrentWeather();
+    frame->getForecast();
+    frame->show();
 
-        pinMode(12, INPUT);
-
-        wiringPiISR(12, INT_EDGE_FALLING, &touchEvent);
-
-	QCursor cursor(Qt::BlankCursor);
-	QApplication::setOverrideCursor(cursor);
-	frame = new MirrorFrame();
-    	frame->setGeometry(0, 0, 1280, 1920);
-	frame->getEvents();
-	frame->getCurrentWeather();
-	frame->getForecast();
-	frame->show();
-
-	return app.exec();
+    return app.exec();
 }
 

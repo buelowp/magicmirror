@@ -94,6 +94,8 @@ void WeatherData::forecastReplyFinished(QNetworkReply *reply)
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
 		QJsonObject jobj = jdoc.object();
 		QJsonArray entries = jobj["list"].toArray();
+        emit forecastEntryCount(entries.count());
+        qDebug() << __PRETTY_FUNCTION__ << ": sending" << entries.count() << "entries to the mirror";
 		for (int i = 0; i < entries.size(); i++) {
 			emit forecastEntry(entries[i].toObject());
 		}

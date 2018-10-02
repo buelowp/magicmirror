@@ -2,11 +2,16 @@ TEMPLATE = app
 
 CONFIG += gui network debug core
 
+USE_RPI = FALSE
+
 QT += widgets network
 
 OBJECTS_DIR = .obj
 MOC_DIR = .moc
-LIBS = -lwiringPi -lth02
+
+contains (USE_RPI, TRUE) {
+    LIBS = -lwiringPi -lth02
+}
 
 SOURCES = MirrorFrame.cpp \
 	CalendarData.cpp \

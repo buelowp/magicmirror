@@ -18,7 +18,9 @@
 #include <QtNetwork/QtNetwork>
 #include <QtCore/QtCore>
 #include <QtWidgets/QtWidgets>
-#include <th02.h>
+#ifdef __LOCAL_TEMP__
+    #include <th02.h>
+#endif
 #include "CalendarData.h"
 #include "WeatherData.h"
 
@@ -51,6 +53,7 @@ public slots:
 	void sunset(qint64);
 	void forecastEntry(QJsonObject);
 	void forecastFinished();
+    void forecastEntryCount(int);
 	void currentConditionsFinished();
 	void updateClock();
 	void monitorOn();
@@ -65,7 +68,7 @@ signals:
 //	void showEvent(QShowEvent*);
 
 private:
-	void deleteCalendarEventsList();
+    void deleteCalendarEventsList();
 	void createStateMachine();
 	void enableTimers();
 	void turnMonitorOn();
@@ -103,6 +106,7 @@ private:
 	
 	int m_calEventsY;
 	int m_forecastIndex;
+    int m_forecastEntryCount;
 	bool m_newEventList;
 	bool m_resetForecastTimer;
 	double m_humidity;

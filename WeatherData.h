@@ -27,6 +27,7 @@ signals:
 	void sunset(qint64);
 	void forecastFinished();
 	void currentConditionsFinished();
+    void forecastEntryCount(int);
 
 public slots:
 	void processForecast();

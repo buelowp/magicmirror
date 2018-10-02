@@ -464,7 +464,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
             text.append(" and very humid");
         }
         else if (humidity < 55) {
-            text.append(" feeling dry");
+            text.append(" and dry");
         }
         lb->setText(text);
     }

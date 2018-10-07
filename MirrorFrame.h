@@ -18,7 +18,7 @@
 #include <QtNetwork/QtNetwork>
 #include <QtCore/QtCore>
 #include <QtWidgets/QtWidgets>
-#ifdef __LOCAL_TEMP__
+#ifdef __USE_RPI__
     #include <th02.h>
 #endif
 #include "CalendarData.h"

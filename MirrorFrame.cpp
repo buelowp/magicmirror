@@ -199,7 +199,7 @@ void MirrorFrame::updateLocalTemp()
 	double t = 0.0;
 	double h = 0.0;
 
-#ifdef __LOCAL_TEMP__
+#ifdef __USE_RPI__
 	if (getValues(&t, &h) == 0) {
 		m_temperature = t;
 		m_humidity = h;

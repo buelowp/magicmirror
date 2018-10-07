@@ -81,7 +81,7 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 			emit skyConditions(obj["main"].toString());
 		}
 	}
-	emit currentConditionsFinished();
+	emit finished();
 }
 
 void WeatherData::forecastReplyFinished(QNetworkReply *reply)
@@ -100,5 +100,5 @@ void WeatherData::forecastReplyFinished(QNetworkReply *reply)
 			emit forecastEntry(entries[i].toObject());
 		}
 	}
-	emit forecastFinished();
+	emit finished();
 }

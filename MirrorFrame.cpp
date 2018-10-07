@@ -272,10 +272,10 @@ void MirrorFrame::getCurrentWeather()
 	event->addZip(settings.value("zip").toString(), settings.value("country").toString());
 	event->addAppID(settings.value("appid").toString());
 	event->moveToThread(thread);
+    event->setThreadPointer(thread);
 	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
-	connect(event, SIGNAL(currentConditionsFinished()), this, SLOT(currentConditionsFinished()));
 	connect(event, SIGNAL(error(QString)), this, SLOT(weatherDataError(QString)));
-	connect(event, SIGNAL(finished()), event, SLOT(deleteLater()));
+	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
 	connect(event, SIGNAL(finished()), this, SLOT(weatherEventsDone()));
 	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
 	connect(thread, SIGNAL(started()), event, SLOT(processCurrentWeather()));
@@ -299,8 +299,8 @@ void MirrorFrame::getForecast()
 	event->addZip(settings.value("zip").toString(), settings.value("country").toString());
 	event->addAppID(settings.value("appid").toString());
 	event->moveToThread(thread);
+    event->setThreadPointer(thread);
 	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
-	connect(event, SIGNAL(forecastFinished()), this, SLOT(forecastFinished()));
 	connect(event, SIGNAL(error(QString)), this, SLOT(weatherDataError(QString)));
 	connect(event, SIGNAL(finished()), event, SLOT(deleteLater()));
 	connect(event, SIGNAL(finished()), this, SLOT(weatherEventsDone()));
@@ -362,17 +362,6 @@ void MirrorFrame::currentWindSpeed(double speed)
 }
 
 void MirrorFrame::weatherDataError(QString)
-{
-	qDebug() << __PRETTY_FUNCTION__;
-}
-
-void MirrorFrame::forecastFinished()
-{
-	qDebug() << __PRETTY_FUNCTION__;
-	m_forecastIndex = 0;
-}
-
-void MirrorFrame::currentConditionsFinished()
 {
 	qDebug() << __PRETTY_FUNCTION__;
 }

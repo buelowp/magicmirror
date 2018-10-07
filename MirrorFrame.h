@@ -26,7 +26,7 @@
 
 #define MONITOR_TIMEOUT		(1000 * 60 * 1)
 #define CALEVENTS_TIMEOUT	(1000 * 60 * 60 * 1)
-#define FORECAST_TIMEOUT	(1000 * 60 * 60 * 12)
+#define FORECAST_TIMEOUT	(1000 * 60 * 60 * 4)
 #define CURRENT_TIMEOUT		(1000 * 60 * 60 * 1)
 
 class MirrorFrame : public QFrame {
@@ -52,15 +52,13 @@ public slots:
 	void sunrise(qint64);
 	void sunset(qint64);
 	void forecastEntry(QJsonObject);
-	void forecastFinished();
     void forecastEntryCount(int);
-	void currentConditionsFinished();
 	void updateClock();
 	void monitorOn();
 	void monitorOff();
 	void resetMonitorTimer();
 	void updateLocalTemp();
-
+    
 signals:
 	void touchDetected();
 

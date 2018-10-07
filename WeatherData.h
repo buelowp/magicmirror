@@ -13,6 +13,7 @@ public:
 
 	void addZip(QString, QString);
 	void addAppID(QString);
+    void setThreadPointer(QThread *t) { m_thread = t; }
 
 signals:
 	void currentConditions(QMap<QString,QString>);
@@ -25,8 +26,6 @@ signals:
 	void skyConditions(QString);
 	void sunrise(qint64);
 	void sunset(qint64);
-	void forecastFinished();
-	void currentConditionsFinished();
     void forecastEntryCount(int);
 
 public slots:
@@ -40,6 +39,7 @@ private:
 	QNetworkAccessManager *m_current;
 	QString m_appID;
 	QString m_zip;
+    QThread *m_thread;
 };
 
 #endif

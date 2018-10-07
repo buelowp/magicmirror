@@ -9,8 +9,9 @@ QT += widgets network
 OBJECTS_DIR = .obj
 MOC_DIR = .moc
 
-contains (USE_RPI, TRUE) {
-    LIBS = -lwiringPi -lth02
+defined (__USE_RPI__, var) {
+     LIBS = -lwiringPi -lth02
+    QMAKE_CXXFLAGS += -D__USE_RPI__
 }
 
 SOURCES = MirrorFrame.cpp \

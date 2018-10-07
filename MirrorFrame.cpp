@@ -257,9 +257,9 @@ void MirrorFrame::turnMonitorOn()
 
 void MirrorFrame::updateClock()
 {
+    qDebug() << __PRETTY_FUNCTION__;
 	QDateTime now = QDateTime::currentDateTime();
 	m_clockLabel->setText(now.toString("ddd MMM d h:mm ap"));
-	update();
 }
 
 void MirrorFrame::getCurrentWeather()
@@ -484,7 +484,6 @@ void MirrorFrame::calendarEventsDone()
 {
 	qDebug() << __PRETTY_FUNCTION__;
 	m_newEventList = true;
-	update();
 }
 
 void MirrorFrame::calendarEventsEvent(QString s)

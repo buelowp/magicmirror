@@ -54,12 +54,12 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_currentTempLabel = new QLabel(this);
 	m_currentTempLabel->setGeometry(50, 1100, 350, 50);
 	m_currentTempLabel->setFont(f);
-	m_currentTempLabel->setText("<center>Temperature</center>");
+	m_currentTempLabel->setText("<center>Outside Temperature</center>");
 
 	m_currentHumidityLabel = new QLabel(this);
 	m_currentHumidityLabel->setGeometry(400, 1100, 350, 50);
 	m_currentHumidityLabel->setFont(f);
-	m_currentHumidityLabel->setText("<center>Humidity</center>");
+	m_currentHumidityLabel->setText("<center>Outside Humidity</center>");
 
 	m_sunriseLabel = new QLabel(this);
 	m_sunriseLabel->setGeometry(750, 1100, 350, 50);
@@ -257,7 +257,6 @@ void MirrorFrame::turnMonitorOn()
 
 void MirrorFrame::updateClock()
 {
-    qDebug() << __PRETTY_FUNCTION__;
 	QDateTime now = QDateTime::currentDateTime();
 	m_clockLabel->setText(now.toString("ddd MMM d h:mm ap"));
 }

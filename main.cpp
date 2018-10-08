@@ -42,7 +42,8 @@ void touchEvent(void) {
 
 void setupTouchEvents()
 {
-#ifdef __USE_PI__
+#ifdef __USE_RPI__
+	qDebug() << __PRETTY_FUNCTION__;
     wiringPiSetupGpio();
     pinMode(12, INPUT);
     wiringPiISR(12, INT_EDGE_FALLING, &touchEvent);

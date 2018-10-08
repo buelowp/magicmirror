@@ -14,8 +14,8 @@
 
 #include <QApplication>
 
-#ifdef __WIRING_PI__
-#include <wiringPi.h>
+#ifdef __USE_RPI__
+  #include <wiringPi.h>
 #endif
 
 #include "MirrorFrame.h"
@@ -42,7 +42,7 @@ void touchEvent(void) {
 
 void setupTouchEvents()
 {
-#ifdef __WIRING_PI__
+#ifdef __USE_PI__
     wiringPiSetupGpio();
     pinMode(12, INPUT);
     wiringPiISR(12, INT_EDGE_FALLING, &touchEvent);

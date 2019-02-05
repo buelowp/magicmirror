@@ -398,63 +398,65 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
         sky = obj["main"].toString();
     }
 
-    QLabel *lb = m_forecastEntries[m_forecastIndex++];
-    if (now.date() == dt.date()) {
-        QString text = QString("Today high: %1%2, low: %3%4, %5")
-            .arg((int)high)
-            .arg(QChar(0260))
-            .arg((int)low)
-            .arg(QChar(0260))
-            .arg(sky);
+    while (m_forecastIndex < m_forecastEntries.size()) {
+        QLabel *lb = m_forecastEntries[m_forecastIndex++];
+        if (now.date() == dt.date()) {
+            QString text = QString("Today's high: %1%2, low: %3%4, %5")
+                .arg((int)high)
+                .arg(QChar(0260))
+                .arg((int)low)
+                .arg(QChar(0260))
+                .arg(sky);
 
-        if (wind <= 5.0) {
-            text.append(", calm");
-        }
-        else if (wind <= 10.0) {
-            text.append(", breezy");
-        }
-        else if (wind < 15.0) {
-            text.append(", windy");
+            if (wind <= 5.0) {
+                text.append(", calm");
+            }
+            else if (wind <= 10.0) {
+                text.append(", breezy");
+            }
+            else if (wind < 15.0) {
+                text.append(", windy");
+            }
+            else {
+                text.append(", very windy");
+            }
+            if (humidity > 75) {
+                text.append(" and very humid");
+            }
+            else if (humidity < 55) {
+                text.append(" feeling dry");
+            }
+            lb->setText(text);
         }
         else {
-            text.append(", very windy");
-        }
-        if (humidity > 75) {
-            text.append(" and very humid");
-        }
-        else if (humidity < 55) {
-            text.append(" feeling dry");
-        }
-        lb->setText(text);
-    }
-    else {
-        QString text = QString("%1: high: %2%3, low: %4%5: %6")
-            .arg(dt.toString("MMM d"))
-            .arg((int)high)
-            .arg(QChar(0260))
-            .arg((int)low)
-            .arg(QChar(0260))
-            .arg(sky);
+            QString text = QString("%1: high: %2%3, low: %4%5: %6")
+                .arg(dt.toString("MMM d"))
+                .arg((int)high)
+                .arg(QChar(0260))
+                .arg((int)low)
+                .arg(QChar(0260))
+                .arg(sky);
 
-        if (wind <= 5.0) {
-            text.append(", calm");
+            if (wind <= 5.0) {
+                text.append(", calm");
+            }
+            else if (wind <= 10.0) {
+                text.append(", breezy");
+            }
+            else if (wind < 15.0) {
+                text.append(", windy");
+            }
+            else {
+                text.append(", very windy");
+            }
+            if (humidity > 75) {
+                text.append(" and very humid");
+            }
+            else if (humidity < 55) {
+                text.append(" and dry");
+            }
+            lb->setText(text);
         }
-        else if (wind <= 10.0) {
-            text.append(", breezy");
-        }
-        else if (wind < 15.0) {
-            text.append(", windy");
-        }
-        else {
-            text.append(", very windy");
-        }
-        if (humidity > 75) {
-            text.append(" and very humid");
-        }
-        else if (humidity < 55) {
-            text.append(" and dry");
-        }
-        lb->setText(text);
     }
 }
 

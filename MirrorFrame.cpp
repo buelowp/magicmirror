@@ -128,6 +128,8 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_newEventList = false;
 	m_resetForecastTimer = true;
     m_forecastEntryCount = 0;
+    m_temperature = 0.0;
+    m_humidity = 0.0;
 	
 	createStateMachine();
 	enableTimers();
@@ -196,9 +198,6 @@ void MirrorFrame::enableTimers()
 
 void MirrorFrame::updateLocalTemp()
 {
-	double t = 0.0;
-	double h = 0.0;
-
 #ifdef __USE_RPI__
 	if (getValues(&t, &h) == 0) {
 		m_temperature = t;
@@ -398,7 +397,8 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
         sky = obj["main"].toString();
     }
 
-    while (m_forecastIndex < m_forecastEntries.size()) {
+    if (m_forecastIndex < m_forecastEntries.size()) {
+        qDebug() << __PRETTY_FUNCTION__ << ": Updating entry index " << m_forecastIndex;
         QLabel *lb = m_forecastEntries[m_forecastIndex++];
         if (now.date() == dt.date()) {
             QString text = QString("Today's high: %1%2, low: %3%4, %5")

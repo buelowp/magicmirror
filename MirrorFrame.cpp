@@ -167,10 +167,8 @@ void MirrorFrame::enableTimers()
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
 	int monitorTimeout = settings.value("screentimeout").toInt();
 	QDateTime now = QDateTime::currentDateTime();
-	QDateTime midnight;
-	QDate tomorrow(now.date().year(), now.date().month(), now.date().day());
-	tomorrow = tomorrow.addDays(1);
-	midnight.setDate(tomorrow);
+	QDateTime midnight(QDate(now.date().year(), now.date().month(), now.date().day()), QTime(1, 0, 0));
+    midnight = midnight.addDays(1);
 		
 	connect(m_calendarTimer, SIGNAL(timeout()), this, SLOT(getEvents()));
 	m_calendarTimer->start(CALEVENTS_TIMEOUT);		// Get Events once an hour
@@ -182,10 +180,10 @@ void MirrorFrame::enableTimers()
 	m_currentWeatherTimer->start(CURRENT_TIMEOUT);	// get current weather conditions once an hour
 	
 	connect(m_clockTimer, SIGNAL(timeout()), this, SLOT(updateClock()));
-	m_clockTimer->start(500);					// Update the clock 1x a second
+	m_clockTimer->start(500);					// Update the clock 2x a second
 
 	connect(m_localTempTimer, SIGNAL(timeout()), this, SLOT(updateLocalTemp()));
-	m_localTempTimer->start(1000 * 60);
+	m_localTempTimer->start(1000);        // Get sensor data every second
 
 	if (monitorTimeout == 0)
 		monitorTimeout = MONITOR_TIMEOUT;
@@ -193,17 +191,21 @@ void MirrorFrame::enableTimers()
 		monitorTimeout = monitorTimeout * 1000 * 60;
 
 	qDebug() << __PRETTY_FUNCTION__ << ": setting monitor timeout to" << monitorTimeout;
+    qDebug() << __PRETTY_FUNCTION__ << ": Getting next forecast at" << midnight;
 	m_monitorTimer->start(monitorTimeout);
 }
 
 void MirrorFrame::updateLocalTemp()
 {
+    double t = 0.0;
+    double h = 0.0;
+    
 #ifdef __USE_RPI__
 	if (getValues(&t, &h) == 0) {
 		m_temperature = t;
 		m_humidity = h;
 	}
-	qDebug() << __PRETTY_FUNCTION__ << ": temp: " << m_temperature << ", humidity: " << m_humidity;
+	qDebug() << __PRETTY_FUNCTION__ << ": temp: " << m_temperature << ", humidity:" << m_humidity;
 #endif
 	m_localTemp->setText(QString("<center>%1%2</center>").arg(m_temperature, 0, 'f', 1).arg(QChar(0260)));
 	m_localHumidity->setText(QString("<center>%1%</center>").arg(m_humidity, 0, 'f', 1));
@@ -411,20 +413,20 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
             if (wind <= 5.0) {
                 text.append(", calm");
             }
-            else if (wind <= 10.0) {
+            else if (wind <= 15.0) {
                 text.append(", breezy");
             }
-            else if (wind < 15.0) {
-                text.append(", windy");
-            }
             else {
-                text.append(", very windy");
+                text.append(", windy");
             }
             if (humidity > 75) {
                 text.append(" and very humid");
             }
-            else if (humidity < 55) {
-                text.append(" feeling dry");
+            else if (humidity > 60) {
+                text.append(" and humid");
+            }
+            else if (humidity < 50 && humidity > 0) {
+                text.append(" dry");
             }
             lb->setText(text);
         }
@@ -440,19 +442,19 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
             if (wind <= 5.0) {
                 text.append(", calm");
             }
-            else if (wind <= 10.0) {
+            else if (wind <= 15.0) {
                 text.append(", breezy");
             }
-            else if (wind < 15.0) {
-                text.append(", windy");
-            }
             else {
-                text.append(", very windy");
+                text.append(", windy");
             }
             if (humidity > 75) {
                 text.append(" and very humid");
             }
-            else if (humidity < 55) {
+            else if (humidity > 60) {
+                text.append(" and humid");
+            }
+            else if (humidity < 50 && humidity > 0) {
                 text.append(" and dry");
             }
             lb->setText(text);

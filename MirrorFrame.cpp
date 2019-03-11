@@ -131,6 +131,8 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
     m_temperature = 0.0;
     m_humidity = 0.0;
 	
+    createWeatherSystem();
+    createCalendarSystem();
 	createStateMachine();
 	enableTimers();
 
@@ -139,6 +141,33 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 
 MirrorFrame::~MirrorFrame()
 {
+}
+
+void MirrorFrame::createWeatherSystem()
+{
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
+    m_weatherEvent = new WeatherData();
+    m_weatherEvent->addZip(settings.value("zip").toString(), settings.value("country").toString());
+	m_weatherEvent->addAppID(settings.value("appid").toString());
+
+    connect(m_weatherEvent, SIGNAL(temperature(double)), this, SLOT(currentTemperature(double)));
+	connect(m_weatherEvent, SIGNAL(humidity(double)), this, SLOT(currentHumidity(double)));
+	connect(m_weatherEvent, SIGNAL(windSpeed(double)), this, SLOT(currentWindSpeed(double)));
+	connect(m_weatherEvent, SIGNAL(skyConditions(QString)), this, SLOT(currentSkyConditions(QString)));
+	connect(m_weatherEvent, SIGNAL(sunrise(qint64)), this, SLOT(sunrise(qint64)));
+	connect(m_weatherEvent, SIGNAL(sunset(qint64)), this, SLOT(sunset(qint64)));
+    connect(m_weatherEvent, SIGNAL(forecastEntryCount(int)), this, SLOT(forecastEntryCount(int)));
+	connect(m_weatherEvent, SIGNAL(finished()), this, SLOT(weatherEventsDone()));
+	connect(m_weatherEvent, SIGNAL(error(QString)), this, SLOT(weatherDataError(QString)));
+    connect(m_weatherEvent, SIGNAL(forecastEntry(QJsonObject)), this, SLOT(forecastEntry(QJsonObject)));
+}
+
+void MirrorFrame::createCalendarSystem()
+{
+	m_calendarEvent = new CalendarData();
+	connect(m_calendarEvent, SIGNAL(error(QString)), this, SLOT(calendarEventsError(QString)));
+	connect(m_calendarEvent, SIGNAL(newEvent(QString)), this, SLOT(calendarEventsEvent(QString)));
+	connect(m_calendarEvent, SIGNAL(finished()), this, SLOT(calendarEventsDone()));
 }
 
 void MirrorFrame::registerTouchEvent()
@@ -264,53 +293,12 @@ void MirrorFrame::updateClock()
 
 void MirrorFrame::getCurrentWeather()
 {
-	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
-
-	qDebug() << __PRETTY_FUNCTION__;
-	QThread* thread = new QThread;
-	WeatherData *event = new WeatherData();
-	event->addZip(settings.value("zip").toString(), settings.value("country").toString());
-	event->addAppID(settings.value("appid").toString());
-	event->moveToThread(thread);
-    event->setThreadPointer(thread);
-	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
-	connect(event, SIGNAL(error(QString)), this, SLOT(weatherDataError(QString)));
-	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
-	connect(event, SIGNAL(finished()), this, SLOT(weatherEventsDone()));
-	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-	connect(thread, SIGNAL(started()), event, SLOT(processCurrentWeather()));
-	connect(event, SIGNAL(temperature(double)), this, SLOT(currentTemperature(double)));
-	connect(event, SIGNAL(humidity(double)), this, SLOT(currentHumidity(double)));
-	connect(event, SIGNAL(windSpeed(double)), this, SLOT(currentWindSpeed(double)));
-	connect(event, SIGNAL(skyConditions(QString)), this, SLOT(currentSkyConditions(QString)));
-	connect(event, SIGNAL(sunrise(qint64)), this, SLOT(sunrise(qint64)));
-	connect(event, SIGNAL(sunset(qint64)), this, SLOT(sunset(qint64)));
-    connect(event, SIGNAL(forecastEntryCount(int)), this, SLOT(forecastEntryCount(int)));
-	thread->start();
+    m_weatherEvent->processCurrentWeather();
 }
 
 void MirrorFrame::getForecast()
 {
-	QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
-
-	qDebug() << __PRETTY_FUNCTION__;
-	QThread* thread = new QThread;
-	WeatherData *event = new WeatherData();
-	event->addZip(settings.value("zip").toString(), settings.value("country").toString());
-	event->addAppID(settings.value("appid").toString());
-	event->moveToThread(thread);
-    event->setThreadPointer(thread);
-	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
-	connect(event, SIGNAL(error(QString)), this, SLOT(weatherDataError(QString)));
-	connect(event, SIGNAL(finished()), event, SLOT(deleteLater()));
-	connect(event, SIGNAL(finished()), this, SLOT(weatherEventsDone()));
-	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-	connect(thread, SIGNAL(started()), event, SLOT(processForecast()));
-	connect(event, SIGNAL(forecastEntry(QJsonObject)), this, SLOT(forecastEntry(QJsonObject)));
-    connect(event, SIGNAL(forecastEntryCount(int)), this, SLOT(forecastEntryCount(int)));
-	thread->start();
-	m_resetForecastTimer = false;
-	m_forecastTimer->setInterval(FORECAST_TIMEOUT);		// Run the forecaster every 12 hours
+    m_weatherEvent->processForecast();
 }
 
 void MirrorFrame::sunrise(qint64 t)
@@ -399,6 +387,9 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
         sky = obj["main"].toString();
     }
 
+    qDebug() << __PRETTY_FUNCTION__ << ": Got" << jobj;
+    qDebug() << __PRETTY_FUNCTION__ << ": for index" << m_forecastIndex;
+    
     if (m_forecastIndex < m_forecastEntries.size()) {
         qDebug() << __PRETTY_FUNCTION__ << ": Updating entry index " << m_forecastIndex;
         QLabel *lb = m_forecastEntries[m_forecastIndex++];
@@ -464,18 +455,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
 
 void MirrorFrame::getEvents()
 {
-	qDebug() << __PRETTY_FUNCTION__;
-	QThread* thread = new QThread;
-	CalendarData *event = new CalendarData();
-	event->moveToThread(thread);
-	connect(event, SIGNAL(finished()), thread, SLOT(quit()));
-	connect(event, SIGNAL(error(QString)), this, SLOT(calendarEventsError(QString)));
-	connect(event, SIGNAL(newEvent(QString)), this, SLOT(calendarEventsEvent(QString)));
-	connect(event, SIGNAL(finished()), event, SLOT(deleteLater()));
-	connect(event, SIGNAL(finished()), this, SLOT(calendarEventsDone()));
-	connect(thread, SIGNAL(finished()), thread, SLOT(deleteLater()));
-	connect(thread, SIGNAL(started()), event, SLOT(process()));
-	thread->start();
+    m_calendarEvent->process();
 }
 
 void MirrorFrame::calendarEventsError(QString)

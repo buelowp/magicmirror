@@ -71,6 +71,8 @@ private:
 	void enableTimers();
 	void turnMonitorOn();
 	void turnMonitorOff();
+    void createWeatherSystem();
+    void createCalendarSystem();
 
 	QStateMachine *m_monitorState;
 	QTimer *m_calendarTimer;
@@ -102,6 +104,9 @@ private:
 	QLabel *m_localHumidity;
 	QVector<QLabel*> m_forecastEntries;
 	
+    WeatherData *m_weatherEvent;
+    CalendarData *m_calendarEvent;
+    
 	int m_calEventsY;
 	int m_forecastIndex;
     int m_forecastEntryCount;

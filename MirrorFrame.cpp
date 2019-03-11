@@ -393,9 +393,6 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
         sky = obj["main"].toString();
     }
 
-    qDebug() << __PRETTY_FUNCTION__ << ": Got" << jobj;
-    qDebug() << __PRETTY_FUNCTION__ << ": for index" << m_forecastIndex;
-    
     if (m_forecastIndex < m_forecastEntries.size()) {
         qDebug() << __PRETTY_FUNCTION__ << ": Updating entry index " << m_forecastIndex;
         QLabel *lb = m_forecastEntries[m_forecastIndex++];

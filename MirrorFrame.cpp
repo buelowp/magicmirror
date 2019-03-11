@@ -196,13 +196,14 @@ void MirrorFrame::enableTimers()
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
 	int monitorTimeout = settings.value("screentimeout").toInt();
 	QDateTime now = QDateTime::currentDateTime();
-	QDateTime midnight(QDate(now.date().year(), now.date().month(), now.date().day()), QTime(1, 0, 0));
+	QDateTime midnight(QDate(now.date().year(), now.date().month(), now.date().day()), QTime(4, 0, 0));
     midnight = midnight.addDays(1);
 		
 	connect(m_calendarTimer, SIGNAL(timeout()), this, SLOT(getEvents()));
 	m_calendarTimer->start(CALEVENTS_TIMEOUT);		// Get Events once an hour
 	
 	connect(m_forecastTimer, SIGNAL(timeout()), this, SLOT(getForecast()));
+    m_forecastTimer->setSingleShot(true);
 	m_forecastTimer->start(now.msecsTo(midnight));		// set to timeout at midnight, we reset it to 12 hours later
 	
 	connect(m_currentWeatherTimer, SIGNAL(timeout()), this, SLOT(getCurrentWeather()));
@@ -299,6 +300,11 @@ void MirrorFrame::getCurrentWeather()
 void MirrorFrame::getForecast()
 {
     m_weatherEvent->processForecast();
+    if (m_forecastTimer->isSingleShot()) {
+        m_forecastTimer->setSingleShot(false);
+        m_forecastTimer->setInterval(TWELVE_HOURS);
+        m_forecastTimer->start();
+    }
 }
 
 void MirrorFrame::sunrise(qint64 t)

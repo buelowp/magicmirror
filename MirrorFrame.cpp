@@ -117,11 +117,17 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_sunset->setFont(f);
 
 	for (int i = 0; i < 5; i++) {
-		QLabel *lb = new QLabel(this);
-		lb->setGeometry(50, ((i * 50) + 1500), 1200, 50);
-		lb->setFont(f);
-		m_forecastEntries.push_back(lb);
+		QLabel *forecast = new QLabel(this);
+        QLabel *icon = new QLabel(this);
+        icon->setGeometry(50, ((i * 50) + 1500), 100, 50);
+		forecast->setGeometry(150, ((i * 50) + 1500), 1150, 50);
+		forecast->setFont(f);
+		m_forecastEntries.push_back(forecast);
+        m_iconEntries.push_back(icon);
 	}
+
+    m_icon = new QNetworkAccessManager(this);
+    connect(m_icon, SIGNAL(finished(QNetworkReply*)), this, SLOT(iconReplyFinished(QNetworkReply*)));
 
 	m_calEventsY = 110;
 	m_forecastIndex = 0;
@@ -243,7 +249,6 @@ void MirrorFrame::updateLocalTemp()
 
 void MirrorFrame::resetMonitorTimer()
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	if (m_monitorTimer->isActive())
 		m_monitorTimer->stop();
 
@@ -252,7 +257,6 @@ void MirrorFrame::resetMonitorTimer()
 
 void MirrorFrame::monitorOff()
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	turnMonitorOff();
 	if (m_monitorTimer->isActive())
 		m_monitorTimer->stop();
@@ -260,7 +264,6 @@ void MirrorFrame::monitorOff()
 
 void MirrorFrame::monitorOn()
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	if (!m_monitorTimer->isActive()) {
 		m_monitorTimer->setInterval(MONITOR_TIMEOUT);
 		m_monitorTimer->start();
@@ -272,7 +275,6 @@ void MirrorFrame::turnMonitorOff()
 {
 	QProcess p;
 	
-	qDebug() << __PRETTY_FUNCTION__;
 	p.start("vcgencmd", QStringList() << "display_power" << "0");
 	p.waitForFinished();
 }
@@ -281,7 +283,6 @@ void MirrorFrame::turnMonitorOn()
 {
 	QProcess p;
 	
-	qDebug() << __PRETTY_FUNCTION__;
 	p.start("vcgencmd", QStringList() << "display_power" << "1");
 	p.waitForFinished();
 }
@@ -309,7 +310,6 @@ void MirrorFrame::getForecast()
 
 void MirrorFrame::sunrise(qint64 t)
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	QDateTime s;
 	s.setMSecsSinceEpoch(t * 1000);
 	m_sunrise->setText(QString("<center>%1</center>").arg(s.toString("hh:mm ap")));
@@ -317,7 +317,6 @@ void MirrorFrame::sunrise(qint64 t)
 
 void MirrorFrame::sunset(qint64 t)
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	QDateTime s;
 	s.setMSecsSinceEpoch(t * 1000);
 	m_sunset->setText(QString("<center>%1</center>").arg(s.toString("hh:mm ap")));
@@ -330,19 +329,16 @@ void MirrorFrame::weatherEventsDone()
 
 void MirrorFrame::currentTemperature(double temp)
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	m_currentTemp->setText(QString("<center>%1%2</center>").arg(temp, 0, 'f', 1).arg(QChar(0260)));
 }
 
 void MirrorFrame::currentSkyConditions(QString sky)
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	m_currentSky->setText(QString("<center>%1</center>").arg(sky));
 }
 
 void MirrorFrame::currentHumidity(double humidity)
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	m_currentHumidity->setText(QString("<center>%1%</center>").arg(humidity));
 }
 
@@ -351,7 +347,6 @@ void MirrorFrame::currentWindSpeed(double speed)
 	speed = speed + 0.5;
 	int rounded = (int)speed;
 
-	qDebug() << __PRETTY_FUNCTION__;
 	m_currentWind->setText(QString("<center>%1 mph</center>").arg(rounded));
 }
 
@@ -364,11 +359,12 @@ void MirrorFrame::forecastEntryCount(int c)
 {
     m_forecastEntryCount = c;
     m_forecastIndex = 0;
-    qDebug() << __PRETTY_FUNCTION__ << ": There are" << m_forecastEntryCount << "responses in the forecast";
+    m_icons.clear();
 }
 
 void MirrorFrame::forecastEntry(QJsonObject jobj)
 {
+    WeatherIcon icon;
     QDateTime dt;
     QDateTime now = QDateTime::currentDateTime();
     int humidity;
@@ -377,10 +373,12 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
     double wind;
     QString sky;
 
-    qDebug() << __PRETTY_FUNCTION__ << jobj;
     qint64 secs = jobj["dt"].toInt();
     secs *= 1000;
     dt.setMSecsSinceEpoch(secs);
+    if (dt < now)
+        return;
+    
     humidity = jobj["humidity"].toInt();
     QJsonObject temp = jobj["temp"].toObject();
     high = temp["max"].toDouble() + 0.5;
@@ -391,6 +389,21 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
     for (int i = 0; i < weather.size(); ++i) {
         QJsonObject obj = weather[i].toObject();
         sky = obj["main"].toString();
+        QString j = obj["icon"].toString();
+        if (!icon.exists(j)) {
+            qDebug() << __PRETTY_FUNCTION__ << ": Icon" << j << "doesn't exist";
+            getIcon(j);
+        }
+        else {
+            qDebug() << __PRETTY_FUNCTION__ << ": Setting icon" << j << "to index" << m_forecastIndex;
+            QImage image;
+            QPixmap pixmap;
+            icon.get(j, &image);
+            pixmap.convertFromImage(image);
+            QLabel *lb = m_iconEntries[m_forecastIndex];
+            lb->setPixmap(pixmap);
+        }
+        m_icons.push_front(j);
     }
 
     if (m_forecastIndex < m_forecastEntries.size()) {
@@ -468,7 +481,6 @@ void MirrorFrame::calendarEventsError(QString)
 
 void MirrorFrame::calendarEventsDone()
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	m_newEventList = true;
 }
 
@@ -477,7 +489,6 @@ void MirrorFrame::calendarEventsEvent(QString s)
 	if (m_newEventList)
 		deleteCalendarEventsList();
 
-	qDebug() << __PRETTY_FUNCTION__;
 	QLabel *lb = new QLabel(s, this);
 	QFont f("Roboto");
 	f.setPixelSize(25);
@@ -490,7 +501,6 @@ void MirrorFrame::calendarEventsEvent(QString s)
 
 void MirrorFrame::deleteCalendarEventsList()
 {
-    qDebug() << __PRETTY_FUNCTION__ << ": clearing out list";
     for (int i = 0; i < m_calendarEvents.size(); i++) {
         QLabel *lb = m_calendarEvents.at(i);
         lb->hide();
@@ -500,3 +510,41 @@ void MirrorFrame::deleteCalendarEventsList()
     m_newEventList = false;
     m_calEventsY = 110;
 }
+
+void MirrorFrame::getIcon(QString icon)
+{
+    WeatherIcon i;
+    
+    if (!i.exists(icon) && icon.size() > 0) {
+        QUrl u("http://openweathermap.org/img/w/" + icon + ".png");
+        m_icon->get(QNetworkRequest(u));
+    }
+}
+
+void MirrorFrame::iconReplyFinished(QNetworkReply *reply)
+{
+    WeatherIcon icon;
+    if (reply->error()) {
+		qWarning() << __PRETTY_FUNCTION__ << ":" << reply->errorString();
+	}
+	else {
+        QNetworkRequest r = reply->request();
+        QString i = r.url().fileName();
+        if (!icon.exists(i) && i.length() > 0) {
+            icon.store(i, reply->readAll());
+        }
+        for (int j = 0; j < m_icons.size(); j++) {
+            if (m_icons[j] == i) {
+                qDebug() << __PRETTY_FUNCTION__ << ": Setting icon" << m_icons[j] << "for index" << j;
+                QLabel *lb = m_iconEntries[j];
+                QImage image;
+                QPixmap pixmap;
+                icon.get(i, &image);
+                pixmap.convertFromImage(image);
+                lb->setPixmap(pixmap);
+            }
+        }
+    }
+    reply->deleteLater();
+}
+

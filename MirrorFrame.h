@@ -23,6 +23,7 @@
 #endif
 #include "CalendarData.h"
 #include "WeatherData.h"
+#include "weathericon.h"
 
 #define MONITOR_TIMEOUT		(1000 * 60 * 1)
 #define CALEVENTS_TIMEOUT	(1000 * 60 * 60 * 1)
@@ -59,6 +60,7 @@ public slots:
 	void monitorOff();
 	void resetMonitorTimer();
 	void updateLocalTemp();
+    void iconReplyFinished(QNetworkReply*);
     
 signals:
 	void touchDetected();
@@ -74,6 +76,7 @@ private:
 	void turnMonitorOff();
     void createWeatherSystem();
     void createCalendarSystem();
+    void getIcon(QString);
 
 	QStateMachine *m_monitorState;
 	QTimer *m_calendarTimer;
@@ -104,7 +107,10 @@ private:
 	QLabel *m_localHumidityLabel;
 	QLabel *m_localHumidity;
 	QVector<QLabel*> m_forecastEntries;
-	
+    QVector<QLabel*> m_iconEntries;
+    QNetworkAccessManager *m_icon;
+    QVector<QString> m_icons;
+
     WeatherData *m_weatherEvent;
     CalendarData *m_calendarEvent;
     

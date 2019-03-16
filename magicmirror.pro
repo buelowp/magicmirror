@@ -17,9 +17,11 @@ defined (__USE_RPI__, var) {
 SOURCES = MirrorFrame.cpp \
 	CalendarData.cpp \
 	WeatherData.cpp \
-	main.cpp
+	main.cpp \
+	weathericon.cpp
 		
 HEADERS = MirrorFrame.h \
 	CalendarData.h \
 	WeatherData.h \
+	weathericon.h
 

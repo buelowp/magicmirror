@@ -56,10 +56,8 @@ void WeatherData::processForecast()
 	m_forecast->get(QNetworkRequest(u));
 }
 
-
 void WeatherData::currentReplyFinished(QNetworkReply *reply)
 {
-	qDebug() << __PRETTY_FUNCTION__;
 	if (reply->error()) {
 		qWarning() << __PRETTY_FUNCTION__ << ":" << reply->errorString();
 	}
@@ -82,6 +80,7 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 		}
 	}
 	emit finished();
+    reply->deleteLater();
 }
 
 void WeatherData::forecastReplyFinished(QNetworkReply *reply)
@@ -94,11 +93,13 @@ void WeatherData::forecastReplyFinished(QNetworkReply *reply)
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
 		QJsonObject jobj = jdoc.object();
 		QJsonArray entries = jobj["list"].toArray();
-        emit forecastEntryCount(entries.count());
+        QJsonArray weather = jobj["weather"].toArray();
+       emit forecastEntryCount(entries.count());
         qDebug() << __PRETTY_FUNCTION__ << ": sending" << entries.count() << "entries to the mirror";
 		for (int i = 0; i < entries.size(); i++) {
 			emit forecastEntry(entries[i].toObject());
 		}
 	}
 	emit finished();
+    reply->deleteLater();
 }

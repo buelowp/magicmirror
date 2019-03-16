@@ -55,8 +55,11 @@ WeatherIcon::~WeatherIcon()
 
 bool WeatherIcon::get(QString name, QImage *icon)
 {
-    QString fullPath = m_path + "/" + name + ".png";
+    QString fullPath = m_path + "/" + name;
     QImageReader image(fullPath);
+    
+    if (!name.contains("png"))
+        fullPath += ".png";
     
     if (image.canRead()) {
         *icon = image.read();

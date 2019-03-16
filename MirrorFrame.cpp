@@ -376,7 +376,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
     qint64 secs = jobj["dt"].toInt();
     secs *= 1000;
     dt.setMSecsSinceEpoch(secs);
-    if (dt < now)
+    if (dt.date() < now.date())
         return;
     
     humidity = jobj["humidity"].toInt();
@@ -406,6 +406,8 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
         m_icons.push_front(j);
     }
 
+    qDebug() << __PRETTY_FUNCTION__ << ": m_icons size" << m_icons.size();
+    
     if (m_forecastIndex < m_forecastEntries.size()) {
         qDebug() << __PRETTY_FUNCTION__ << ": Updating entry index " << m_forecastIndex;
         QLabel *lb = m_forecastEntries[m_forecastIndex++];
@@ -534,7 +536,7 @@ void MirrorFrame::iconReplyFinished(QNetworkReply *reply)
             icon.store(i, reply->readAll());
         }
         for (int j = 0; j < m_icons.size(); j++) {
-            if (m_icons[j] == i) {
+            if (i.contains(m_icons[j])) {
                 qDebug() << __PRETTY_FUNCTION__ << ": Setting icon" << m_icons[j] << "for index" << j;
                 QLabel *lb = m_iconEntries[j];
                 QImage image;

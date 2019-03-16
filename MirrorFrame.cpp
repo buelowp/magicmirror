@@ -209,8 +209,7 @@ void MirrorFrame::enableTimers()
 	m_calendarTimer->start(CALEVENTS_TIMEOUT);		// Get Events once an hour
 	
 	connect(m_forecastTimer, SIGNAL(timeout()), this, SLOT(getForecast()));
-    m_forecastTimer->setSingleShot(true);
-	m_forecastTimer->start(now.msecsTo(midnight));		// set to timeout at midnight, we reset it to 12 hours later
+	m_forecastTimer->start(FORECAST_TIMEOUT);		// set to timeout at midnight, we reset it to 12 hours later
 	
 	connect(m_currentWeatherTimer, SIGNAL(timeout()), this, SLOT(getCurrentWeather()));
 	m_currentWeatherTimer->start(CURRENT_TIMEOUT);	// get current weather conditions once an hour
@@ -301,11 +300,6 @@ void MirrorFrame::getCurrentWeather()
 void MirrorFrame::getForecast()
 {
     m_weatherEvent->processForecast();
-    if (m_forecastTimer->isSingleShot()) {
-        m_forecastTimer->setSingleShot(false);
-        m_forecastTimer->setInterval(TWELVE_HOURS);
-        m_forecastTimer->start();
-    }
 }
 
 void MirrorFrame::sunrise(qint64 t)

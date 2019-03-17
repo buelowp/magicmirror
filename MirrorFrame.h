@@ -28,7 +28,7 @@
 #define MONITOR_TIMEOUT		(1000 * 60 * 1)
 #define CALEVENTS_TIMEOUT	(1000 * 60 * 60 * 1)
 #define FORECAST_TIMEOUT	(1000 * 60 * 60 * 4)
-#define CURRENT_TIMEOUT		(1000 * 60 * 60 * 1)
+#define CURRENT_TIMEOUT		(1000 * 60 * 5)
 #define TWELVE_HOURS        (1000 * 60 * 60 * 12)
 
 class MirrorFrame : public QFrame {

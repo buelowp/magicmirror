@@ -50,6 +50,9 @@ void CalendarData::processResults(QByteArray &results)
             if (events.at(i).size() == 0)
                 continue;
 
+            if (events.at(i).contains("Getting the upcoming"))
+                continue;
+
             QString eventTime = events.at(i).left(events.at(i).indexOf(' '));
             QString eventDescription = events.at(i).right(events.at(i).size() - events.at(i).indexOf(' '));
             if (eventTime.indexOf("T") != -1) {

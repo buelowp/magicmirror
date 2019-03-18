@@ -27,6 +27,7 @@ signals:
 	void sunrise(qint64);
 	void sunset(qint64);
     void forecastEntryCount(int);
+    void currentIcon(QString);
 
 public slots:
 	void processForecast();

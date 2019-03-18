@@ -62,7 +62,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_currentHumidityLabel->setText("<center>Outside Humidity</center>");
 
 	m_sunriseLabel = new QLabel(this);
-	m_sunriseLabel->setGeometry(750, 1100, 350, 50);
+	m_sunriseLabel->setGeometry(750, 1000, 350, 50);
 	m_sunriseLabel->setFont(f);
 	m_sunriseLabel->setText("<center>Sunrise</center>");
 
@@ -77,10 +77,14 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_currentSkyLabel->setText("<center>Sky Conditions</center>");
 
 	m_sunsetLabel = new QLabel(this);
-	m_sunsetLabel->setGeometry(750, 1200, 350, 50);
+	m_sunsetLabel->setGeometry(750, 1100, 350, 50);
 	m_sunsetLabel->setFont(f);
 	m_sunsetLabel->setText("<center>Sunset</center>");
 
+    m_currentIcon = new QLabel(this);
+    m_currentIcon->setGeometry(750, 1200, 350, 100);
+    m_currentIcon->setAlignment(Qt::AlignCenter);
+    
 	f.setPixelSize(25);
 	f.setBold(false);
 
@@ -101,7 +105,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_currentHumidity->setFont(f);
 
 	m_sunrise = new QLabel(this);
-	m_sunrise->setGeometry(750, 1150, 350, 50);
+	m_sunrise->setGeometry(750, 1050, 350, 50);
 	m_sunrise->setFont(f);
 
 	m_currentWind = new QLabel(this);
@@ -113,7 +117,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_currentSky->setFont(f);
 
 	m_sunset = new QLabel(this);
-	m_sunset->setGeometry(750, 1250, 350, 50);
+	m_sunset->setGeometry(750, 1150, 350, 50);
 	m_sunset->setFont(f);
 
 	for (int i = 0; i < 5; i++) {
@@ -166,6 +170,7 @@ void MirrorFrame::createWeatherSystem()
 	connect(m_weatherEvent, SIGNAL(finished()), this, SLOT(weatherEventsDone()));
 	connect(m_weatherEvent, SIGNAL(error(QString)), this, SLOT(weatherDataError(QString)));
     connect(m_weatherEvent, SIGNAL(forecastEntry(QJsonObject)), this, SLOT(forecastEntry(QJsonObject)));
+    connect(m_weatherEvent, SIGNAL(currentIcon(QString)), this, SLOT(currentIcon(QString)));
 }
 
 void MirrorFrame::createCalendarSystem()
@@ -321,6 +326,24 @@ void MirrorFrame::weatherEventsDone()
 	qDebug() << __PRETTY_FUNCTION__;
 }
 
+void MirrorFrame::currentIcon(QString id)
+{
+    WeatherIcon icon;
+    
+    qDebug() << __PRETTY_FUNCTION__ << ": Setting current icon to" << id;
+    if (!icon.exists(id)) {
+        getIcon(id);
+    }
+    else {
+        QImage image;
+        QPixmap pixmap;
+        icon.get(id, &image);
+        pixmap.convertFromImage(image.scaledToHeight(100, Qt::SmoothTransformation));
+        qDebug() << __PRETTY_FUNCTION__ << ": icon size" << pixmap.rect();
+        m_currentIcon->setPixmap(pixmap);
+    }
+}
+
 void MirrorFrame::currentTemperature(double temp)
 {
 	m_currentTemp->setText(QString("<center>%1%2</center>").arg(temp, 0, 'f', 1).arg(QChar(0260)));
@@ -385,11 +408,9 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
         sky = obj["main"].toString();
         QString j = obj["icon"].toString();
         if (!icon.exists(j)) {
-            qDebug() << __PRETTY_FUNCTION__ << ": Icon" << j << "doesn't exist";
             getIcon(j);
         }
         else {
-            qDebug() << __PRETTY_FUNCTION__ << ": Setting icon" << j << "to index" << m_forecastIndex;
             QImage image;
             QPixmap pixmap;
             icon.get(j, &image);
@@ -400,10 +421,7 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
         m_icons.push_front(j);
     }
 
-    qDebug() << __PRETTY_FUNCTION__ << ": m_icons size" << m_icons.size();
-    
     if (m_forecastIndex < m_forecastEntries.size()) {
-        qDebug() << __PRETTY_FUNCTION__ << ": Updating entry index " << m_forecastIndex;
         QLabel *lb = m_forecastEntries[m_forecastIndex++];
         if (now.date() == dt.date()) {
             QString text = QString("Today's high: %1%2, low: %3%4, %5")
@@ -422,14 +440,11 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
             else {
                 text.append(", windy");
             }
-            if (humidity > 75) {
-                text.append(" and very humid");
-            }
-            else if (humidity > 60) {
+            if (humidity > 70) {
                 text.append(" and humid");
             }
-            else if (humidity < 50 && humidity > 0) {
-                text.append(" dry");
+            else if (humidity < 40 && humidity > 0) {
+                text.append(" and dry");
             }
             lb->setText(text);
         }
@@ -451,13 +466,10 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
             else {
                 text.append(", windy");
             }
-            if (humidity > 75) {
-                text.append(" and very humid");
-            }
-            else if (humidity > 60) {
+            if (humidity > 70) {
                 text.append(" and humid");
             }
-            else if (humidity < 50 && humidity > 0) {
+            else if (humidity < 40 && humidity > 0) {
                 text.append(" and dry");
             }
             lb->setText(text);

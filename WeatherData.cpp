@@ -77,6 +77,7 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 		for (int i = 0; i < weather.size(); ++i) {
 			QJsonObject obj = weather[i].toObject();
 			emit skyConditions(obj["main"].toString());
+            emit currentIcon(obj["icon"].toString());
 		}
 	}
 	emit finished();

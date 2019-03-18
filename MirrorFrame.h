@@ -61,6 +61,7 @@ public slots:
 	void resetMonitorTimer();
 	void updateLocalTemp();
     void iconReplyFinished(QNetworkReply*);
+    void currentIcon(QString);
     
 signals:
 	void touchDetected();
@@ -106,6 +107,7 @@ private:
 	QLabel *m_localTemp;
 	QLabel *m_localHumidityLabel;
 	QLabel *m_localHumidity;
+    QLabel *m_currentIcon;
 	QVector<QLabel*> m_forecastEntries;
     QVector<QLabel*> m_iconEntries;
     QNetworkAccessManager *m_icon;

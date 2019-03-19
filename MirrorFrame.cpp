@@ -330,7 +330,6 @@ void MirrorFrame::currentIcon(QString id)
 {
     WeatherIcon icon;
     
-    qDebug() << __PRETTY_FUNCTION__ << ": Setting current icon to" << id;
     if (!icon.exists(id)) {
         getIcon(id);
     }
@@ -339,7 +338,6 @@ void MirrorFrame::currentIcon(QString id)
         QPixmap pixmap;
         icon.get(id, &image);
         pixmap.convertFromImage(image.scaledToHeight(100, Qt::SmoothTransformation));
-        qDebug() << __PRETTY_FUNCTION__ << ": icon size" << pixmap.rect();
         m_currentIcon->setPixmap(pixmap);
     }
 }
@@ -440,17 +438,19 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
             else {
                 text.append(", windy");
             }
-            if (humidity > 70) {
-                text.append(" and humid");
-            }
-            else if (humidity < 40 && humidity > 0) {
-                text.append(" and dry");
+            if (high >= 80) {
+                if (humidity > 70) {
+                    text.append(" and humid");
+                }
+                else if (humidity < 40 && humidity > 0) {
+                    text.append(" and dry");
+                }
             }
             lb->setText(text);
         }
         else {
             QString text = QString("%1: high: %2%3, low: %4%5: %6")
-                .arg(dt.toString("MMM d"))
+                .arg(dt.toString("dddd"))
                 .arg((int)high)
                 .arg(QChar(0260))
                 .arg((int)low)
@@ -466,11 +466,13 @@ void MirrorFrame::forecastEntry(QJsonObject jobj)
             else {
                 text.append(", windy");
             }
-            if (humidity > 70) {
-                text.append(" and humid");
-            }
-            else if (humidity < 40 && humidity > 0) {
-                text.append(" and dry");
+            if (high >= 80) {
+                if (humidity > 70) {
+                    text.append(" and humid");
+                }
+                else if (humidity < 40 && humidity > 0) {
+                    text.append(" and dry");
+                }
             }
             lb->setText(text);
         }
@@ -543,7 +545,6 @@ void MirrorFrame::iconReplyFinished(QNetworkReply *reply)
         }
         for (int j = 0; j < m_icons.size(); j++) {
             if (i.contains(m_icons[j])) {
-                qDebug() << __PRETTY_FUNCTION__ << ": Setting icon" << m_icons[j] << "for index" << j;
                 QLabel *lb = m_iconEntries[j];
                 QImage image;
                 QPixmap pixmap;

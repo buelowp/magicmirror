@@ -46,3 +46,8 @@ void QMqttSubscriber::onReceived(const QMQTT::Message& message)
 {
     emit messageReceivedOnTopic(message.topic(), QString::fromUtf8(message.payload()));
 }
+
+void QMqttSubscriber::onError(const QMQTT::ClientError error)
+{
+    qDebug() << __PRETTY_FUNCTION__ << ":" << error;
+}

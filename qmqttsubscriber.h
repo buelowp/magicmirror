@@ -40,6 +40,7 @@ public:
         connect(this, &QMqttSubscriber::connected, this, &QMqttSubscriber::onConnected);
         connect(this, &QMqttSubscriber::disconnected, this, &QMqttSubscriber::onDisconnected);
         connect(this, &QMqttSubscriber::received, this, &QMqttSubscriber::onReceived);
+        connect(this, &QMqttSubscriber::error, this, &QMqttSubscriber::onError);
     }
     virtual ~QMqttSubscriber() {}
     
@@ -54,6 +55,7 @@ public slots:
     void onConnected();
     void onReceived(const QMQTT::Message&);
     void onDisconnected();
+    void onError(const QMQTT::ClientError error);
 };
 
 #endif // QMQTTSUBSCRIBER_H

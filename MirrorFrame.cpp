@@ -157,10 +157,22 @@ MirrorFrame::~MirrorFrame()
 void MirrorFrame::setupMqttSubscriber()
 {
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
-    m_mqttClient = new QMqttSubscriber(QHostAddress(settings.value("mqttserver").toString()), settings.value("mqttport").toInt(), this);
+    QString hostname = settings.value("mqttserver").toString();
+    QHostInfo lookup = QHostInfo::fromName(hostname);
+    QList<QHostAddress> addresses = lookup.addresses();
+    
+    if (addresses.size() > 0) {
+        m_mqttClient = new QMqttSubscriber(addresses.at(0), settings.value("mqttport").toInt(), this);
+        qDebug() << __PRETTY_FUNCTION__ << ": setting host address to" << addresses.at(0);
+    }
+    else {
+        m_mqttClient = new QMqttSubscriber(QHostAddress::LocalHost, settings.value("mqttport").toInt(), this);
+        qDebug() << __PRETTY_FUNCTION__ << ": Using localhost";
+    }
     connect(m_mqttClient, SIGNAL(connectionComplete()), this, SLOT(connectionComplete()));
     connect(m_mqttClient, SIGNAL(disconnectedEvent()), this, SLOT(disconnectedEvent()));
     connect(m_mqttClient, SIGNAL(messageReceivedOnTopic(QString, QString)), this, SLOT(messageReceivedOnTopic(QString, QString)));
+    qDebug() << __PRETTY_FUNCTION__;
     m_mqttClient->connectToHost();
 }
 

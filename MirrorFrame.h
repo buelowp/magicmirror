@@ -24,6 +24,7 @@
 #include "CalendarData.h"
 #include "WeatherData.h"
 #include "weathericon.h"
+#include "qmqttsubscriber.h"
 
 #define MONITOR_TIMEOUT		(1000 * 60 * 1)
 #define CALEVENTS_TIMEOUT	(1000 * 60 * 60 * 1)
@@ -62,6 +63,10 @@ public slots:
 	void updateLocalTemp();
     void iconReplyFinished(QNetworkReply*);
     void currentIcon(QString);
+    void messageReceivedOnTopic(QString, QString);
+    void connectionComplete();
+    void disconnectedEvent();
+
     
 signals:
 	void touchDetected();
@@ -78,6 +83,7 @@ private:
     void createWeatherSystem();
     void createCalendarSystem();
     void getIcon(QString);
+    void setupMqttSubscriber();
 
 	QStateMachine *m_monitorState;
 	QTimer *m_calendarTimer;
@@ -115,6 +121,7 @@ private:
 
     WeatherData *m_weatherEvent;
     CalendarData *m_calendarEvent;
+    QMqttSubscriber *m_mqttClient;
     
 	int m_calEventsY;
 	int m_forecastIndex;

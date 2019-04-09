@@ -141,6 +141,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
     m_temperature = 0.0;
     m_humidity = 0.0;
 	
+    setupMqttSubscriber();
     createWeatherSystem();
     createCalendarSystem();
 	createStateMachine();
@@ -151,6 +152,16 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 
 MirrorFrame::~MirrorFrame()
 {
+}
+
+void MirrorFrame::setupMqttSubscriber()
+{
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "MagicMirror", "MagicMirror");
+    m_mqttClient = new QMqttSubscriber(QHostAddress(settings.value("mqttserver").toString()), settings.value("mqttport").toInt(), this);
+    connect(m_mqttClient, SIGNAL(connectionComplete()), this, SLOT(connectionComplete()));
+    connect(m_mqttClient, SIGNAL(disconnectedEvent()), this, SLOT(disconnectedEvent()));
+    connect(m_mqttClient, SIGNAL(messageReceivedOnTopic(QString, QString)), this, SLOT(messageReceivedOnTopic(QString, QString)));
+    m_mqttClient->connectToHost();
 }
 
 void MirrorFrame::createWeatherSystem()
@@ -557,3 +568,17 @@ void MirrorFrame::iconReplyFinished(QNetworkReply *reply)
     reply->deleteLater();
 }
 
+void MirrorFrame::connectionComplete()
+{
+    m_mqttClient->subscribe("lightning/#");
+}
+
+void MirrorFrame::disconnectedEvent()
+{
+    m_mqttClient->connectToHost();
+}
+
+void MirrorFrame::messageReceivedOnTopic(QString t, QString p)
+{
+    qDebug() << __PRETTY_FUNCTION__ << ": Topic:" << t << ", payload: " << p;
+}

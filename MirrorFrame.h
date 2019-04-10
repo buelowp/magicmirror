@@ -66,6 +66,7 @@ public slots:
     void messageReceivedOnTopic(QString, QString);
     void connectionComplete();
     void disconnectedEvent();
+    void lightningTimeout();
 
     
 signals:
@@ -92,6 +93,7 @@ private:
 	QTimer *m_clockTimer;
 	QTimer *m_monitorTimer;
 	QTimer *m_localTempTimer;
+    QTimer *m_lightningTimer;
 	QList<QLabel*> m_calendarEvents;
 	QLabel *m_calLabel;
 	QLabel *m_currentLabel;
@@ -114,6 +116,9 @@ private:
 	QLabel *m_localHumidityLabel;
 	QLabel *m_localHumidity;
     QLabel *m_currentIcon;
+    QLabel *m_lightningLabel;
+    QLabel *m_lightningDistance;
+    
 	QVector<QLabel*> m_forecastEntries;
     QVector<QLabel*> m_iconEntries;
     QNetworkAccessManager *m_icon;

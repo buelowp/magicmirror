@@ -21,17 +21,23 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_forecastLabel = new QLabel("<font color='white'>Local Forecast</font>", this);
 	m_currentLabel = new QLabel("<font color='white'>Current Conditions</font>", this);
 	m_clockLabel = new QLabel(this);
+    m_lightningDistance = new QLabel(this);
+    m_lightningLabel =  new QLabel(this);
 
 	QFont f("Roboto");
 	f.setPixelSize(50);
 	f.setBold(true);
 	m_calLabel->setGeometry(50, 10, 500, 100);
 	m_calLabel->setFont(f);
+    m_lightningLabel->setGeometry(50, 800, 600, 100);
+    m_lightningLabel->setFont(f);
+    m_lightningDistance->setGeometry(700, 800, 300, 100);
+    m_lightningDistance->setFont(f);
 	m_currentLabel->setGeometry(50, 900, 600, 100);
 	m_currentLabel->setFont(f);
 	m_forecastLabel->setGeometry(50, 1400, 500, 100);
 	m_forecastLabel->setFont(f);
-
+    
 	m_clockLabel->setGeometry(700, 10, 650, 100);
 	f.setPixelSize(40);
 	m_clockLabel->setFont(f);
@@ -84,7 +90,7 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
     m_currentIcon = new QLabel(this);
     m_currentIcon->setGeometry(750, 1200, 350, 100);
     m_currentIcon->setAlignment(Qt::AlignCenter);
-    
+
 	f.setPixelSize(25);
 	f.setBold(false);
 
@@ -172,8 +178,11 @@ void MirrorFrame::setupMqttSubscriber()
     connect(m_mqttClient, SIGNAL(connectionComplete()), this, SLOT(connectionComplete()));
     connect(m_mqttClient, SIGNAL(disconnectedEvent()), this, SLOT(disconnectedEvent()));
     connect(m_mqttClient, SIGNAL(messageReceivedOnTopic(QString, QString)), this, SLOT(messageReceivedOnTopic(QString, QString)));
-    qDebug() << __PRETTY_FUNCTION__;
+    m_lightningLabel->setText("Lightning Detected");
+    m_lightningDistance->setText("None");
     m_mqttClient->connectToHost();
+    m_lightningTimer = new QTimer();
+    connect(m_lightningTimer, SIGNAL(timeout()), this, SLOT(lightningTimeout()));
 }
 
 void MirrorFrame::createWeatherSystem()
@@ -593,4 +602,8 @@ void MirrorFrame::disconnectedEvent()
 void MirrorFrame::messageReceivedOnTopic(QString t, QString p)
 {
     qDebug() << __PRETTY_FUNCTION__ << ": Topic:" << t << ", payload: " << p;
+    double d = p.toDouble();
+    double distance = d * .621;
+    
+    m_lightningDistance->setText(QString("%1 miles").arg(distance, 0, 'f', 1));
 }

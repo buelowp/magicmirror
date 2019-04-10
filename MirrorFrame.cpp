@@ -606,4 +606,15 @@ void MirrorFrame::messageReceivedOnTopic(QString t, QString p)
     double distance = d * .621;
     
     m_lightningDistance->setText(QString("%1 miles").arg(distance, 0, 'f', 1));
+    m_lightningTimer->stop();
+    m_lightningTimer->setInterval(THIRTY_MINUTES);
+    m_lightningTimer->start();
+    emit touchDetected();
+        
+}
+
+void MirrorFrame::lightningTimeout()
+{
+    m_lightningDistance->setText("None");
+    m_lightningTimer->stop();
 }

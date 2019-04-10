@@ -31,6 +31,7 @@
 #define FORECAST_TIMEOUT	(1000 * 60 * 60 * 4)
 #define CURRENT_TIMEOUT		(1000 * 60 * 5)
 #define TWELVE_HOURS        (1000 * 60 * 60 * 12)
+#define THIRTY_MINUTES      (1000 * 60 * 30)
 
 class MirrorFrame : public QFrame {
 	Q_OBJECT

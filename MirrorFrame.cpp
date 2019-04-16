@@ -21,7 +21,6 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	m_forecastLabel = new QLabel("<font color='white'>Local Forecast</font>", this);
 	m_currentLabel = new QLabel("<font color='white'>Current Conditions</font>", this);
 	m_clockLabel = new QLabel(this);
-    m_lightningDistance = new QLabel(this);
     m_lightningLabel =  new QLabel(this);
 
 	QFont f("Roboto");
@@ -29,10 +28,8 @@ MirrorFrame::MirrorFrame(QFrame *parent) : QFrame(parent)
 	f.setBold(true);
 	m_calLabel->setGeometry(50, 10, 500, 100);
 	m_calLabel->setFont(f);
-    m_lightningLabel->setGeometry(50, 800, 600, 100);
+    m_lightningLabel->setGeometry(50, 800, 1000, 100);
     m_lightningLabel->setFont(f);
-    m_lightningDistance->setGeometry(700, 800, 300, 100);
-    m_lightningDistance->setFont(f);
 	m_currentLabel->setGeometry(50, 900, 600, 100);
 	m_currentLabel->setFont(f);
 	m_forecastLabel->setGeometry(50, 1400, 500, 100);
@@ -178,8 +175,7 @@ void MirrorFrame::setupMqttSubscriber()
     connect(m_mqttClient, SIGNAL(connectionComplete()), this, SLOT(connectionComplete()));
     connect(m_mqttClient, SIGNAL(disconnectedEvent()), this, SLOT(disconnectedEvent()));
     connect(m_mqttClient, SIGNAL(messageReceivedOnTopic(QString, QString)), this, SLOT(messageReceivedOnTopic(QString, QString)));
-    m_lightningLabel->setText("Lightning Detected");
-    m_lightningDistance->setText("None");
+    m_lightningLabel->setText("Connecting to MQTT server...");
     m_mqttClient->connectToHost();
     m_lightningTimer = new QTimer();
     connect(m_lightningTimer, SIGNAL(timeout()), this, SLOT(lightningTimeout()));
@@ -592,11 +588,13 @@ void MirrorFrame::iconReplyFinished(QNetworkReply *reply)
 void MirrorFrame::connectionComplete()
 {
     m_mqttClient->subscribe("lightning/#");
+    m_lightningLabel->clear();
 }
 
 void MirrorFrame::disconnectedEvent()
 {
     m_mqttClient->connectToHost();
+    m_lightningLabel->setText("Connecting to MQTT server...");
 }
 
 void MirrorFrame::messageReceivedOnTopic(QString t, QString p)
@@ -605,7 +603,7 @@ void MirrorFrame::messageReceivedOnTopic(QString t, QString p)
     double d = p.toDouble();
     double distance = d * .621;
     
-    m_lightningDistance->setText(QString("%1 miles").arg(distance, 0, 'f', 1));
+    m_lightningLabel->setText(QString("Lightning detected at %1 miles").arg(distance, 0, 'f', 1));
     m_lightningTimer->stop();
     m_lightningTimer->setInterval(THIRTY_MINUTES);
     m_lightningTimer->start();
@@ -615,6 +613,6 @@ void MirrorFrame::messageReceivedOnTopic(QString t, QString p)
 
 void MirrorFrame::lightningTimeout()
 {
-    m_lightningDistance->setText("None");
+    m_lightningLabel->setText("");
     m_lightningTimer->stop();
 }

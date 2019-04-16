@@ -118,7 +118,6 @@ private:
 	QLabel *m_localHumidity;
     QLabel *m_currentIcon;
     QLabel *m_lightningLabel;
-    QLabel *m_lightningDistance;
     
 	QVector<QLabel*> m_forecastEntries;
     QVector<QLabel*> m_iconEntries;

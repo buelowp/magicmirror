@@ -591,7 +591,7 @@ void MirrorFrame::iconReplyFinished(QNetworkReply *reply)
 
 void MirrorFrame::connectionComplete()
 {
-    m_mqttClient->subscribe("lightning/#");
+    m_mqttClient->subscribe("weather/lightning/#");
 }
 
 void MirrorFrame::disconnectedEvent()
@@ -602,15 +602,21 @@ void MirrorFrame::disconnectedEvent()
 void MirrorFrame::messageReceivedOnTopic(QString t, QString p)
 {
     qDebug() << __PRETTY_FUNCTION__ << ": Topic:" << t << ", payload: " << p;
-    double d = p.toDouble();
-    double distance = d * .621;
-    
-    m_lightningDistance->setText(QString("%1 miles").arg(distance, 0, 'f', 1));
-    m_lightningTimer->stop();
-    m_lightningTimer->setInterval(THIRTY_MINUTES);
-    m_lightningTimer->start();
-    emit touchDetected();
-        
+    QJsonDocument doc = QJsonDocument::fromJson(p.toLocal8Bit());
+
+    if (!doc.isNull() && !doc.isEmpty()) {
+        QJsonObject object = doc.object();
+        if (object.contains("distance")) {
+            double d = object["distance"].toString().toDouble();
+            double distance = d * .621;
+ 
+            m_lightningDistance->setText(QString("%1 miles").arg(distance, 0, 'f', 1));
+            m_lightningTimer->stop();
+            m_lightningTimer->setInterval(THIRTY_MINUTES);
+            m_lightningTimer->start();
+            emit touchDetected();
+        }       
+    }        
 }
 
 void MirrorFrame::lightningTimeout()

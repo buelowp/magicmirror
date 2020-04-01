@@ -44,7 +44,7 @@ void QMqttSubscriber::onDisconnected()
 
 void QMqttSubscriber::onReceived(const QMQTT::Message& message)
 {
-    emit messageReceivedOnTopic(message.topic(), QString::fromUtf8(message.payload()));
+    emit messageReceivedOnTopic(message.topic(), message.payload());
 }
 
 void QMqttSubscriber::onError(const QMQTT::ClientError error)

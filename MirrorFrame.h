@@ -64,7 +64,7 @@ public slots:
 	void updateLocalTemp();
     void iconReplyFinished(QNetworkReply*);
     void currentIcon(QString);
-    void messageReceivedOnTopic(QString, QString);
+    void messageReceivedOnTopic(QString, QByteArray);
     void connectionComplete();
     void disconnectedEvent();
     void lightningTimeout();

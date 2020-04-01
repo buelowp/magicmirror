@@ -65,8 +65,8 @@ void WeatherData::currentReplyFinished(QNetworkReply *reply)
 		QJsonDocument jdoc = QJsonDocument::fromJson(reply->readAll());
 		QJsonObject jobj = jdoc.object();
 		QJsonObject main = jobj["main"].toObject();
-		emit temperature(main["temp"].toDouble());
-		emit humidity(main["humidity"].toDouble());
+//		emit temperature(main["temp"].toDouble());  // Do this locally now
+//		emit humidity(main["humidity"].toDouble());
 		QJsonObject wind = jobj["wind"].toObject();
 		emit windSpeed(wind["speed"].toDouble());
 

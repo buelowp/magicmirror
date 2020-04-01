@@ -47,7 +47,7 @@ public:
     void subscribeToTopic(QString);
 
 signals:
-    void messageReceivedOnTopic(QString, QString);
+    void messageReceivedOnTopic(QString, QByteArray);
     void connectionComplete();
     void disconnectedEvent();
     

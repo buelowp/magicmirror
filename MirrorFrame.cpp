@@ -382,7 +382,7 @@ void MirrorFrame::currentSkyConditions(QString sky)
 
 void MirrorFrame::currentHumidity(double humidity)
 {
-	m_currentHumidity->setText(QString("<center>%1%</center>").arg(humidity));
+	m_currentHumidity->setText(QString("<center>%1%</center>").arg(humidity, 0, 'f', 1));
 }
 
 void MirrorFrame::currentWindSpeed(double speed)
@@ -587,7 +587,7 @@ void MirrorFrame::iconReplyFinished(QNetworkReply *reply)
 
 void MirrorFrame::connectionComplete()
 {
-    m_mqttClient->subscribe("lightning/#");
+    m_mqttClient->subscribe("weather/#");
     m_lightningLabel->clear();
 }
 
@@ -597,18 +597,41 @@ void MirrorFrame::disconnectedEvent()
     m_lightningLabel->setText("Connecting to MQTT server...");
 }
 
-void MirrorFrame::messageReceivedOnTopic(QString t, QString p)
+void MirrorFrame::messageReceivedOnTopic(QString topic, QByteArray payload)
 {
-    qDebug() << __PRETTY_FUNCTION__ << ": Topic:" << t << ", payload: " << p;
-    double d = p.toDouble();
-    double distance = d * .621;
-    
-    m_lightningLabel->setText(QString("Lightning detected at %1 miles").arg(distance, 0, 'f', 1));
-    m_lightningTimer->stop();
-    m_lightningTimer->setInterval(THIRTY_MINUTES);
-    m_lightningTimer->start();
-    emit touchDetected();
-        
+    if (topic == "weather/event/lightning") {
+        QJsonDocument doc = QJsonDocument::fromJson(payload);
+        if (doc.isObject()) {
+            QJsonObject event = doc.object();
+            QJsonObject lightning = event["lightning"].toObject();
+            
+            int distance = lightning["distance"].toInt();
+            QString label = QString("Lightning detected %1 miles away").arg(distance);
+            m_lightningLabel->setText(label);
+            m_lightningLabel->show();
+        }
+        else {
+            qDebug() << __FUNCTION__ << ": Got bad json";
+            qDebug() << payload;
+        }
+        emit touchDetected();
+    }
+    else if (topic == "weather/conditions") {
+        QJsonDocument doc = QJsonDocument::fromJson(payload);
+        if (doc.isObject()) {
+            QJsonObject parent = doc.object();
+            QJsonObject values = parent["environment"].toObject();
+            
+            double t = values["farenheit"].toDouble();
+            double h = values["humidity"].toDouble();
+            currentTemperature(t);
+            currentHumidity(h);
+        }
+        else {
+            qDebug() << __FUNCTION__ << ": Got bad json";
+            qDebug() << payload;
+        }
+    }
 }
 
 void MirrorFrame::lightningTimeout()

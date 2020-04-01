@@ -599,16 +599,19 @@ void MirrorFrame::disconnectedEvent()
 
 void MirrorFrame::messageReceivedOnTopic(QString topic, QByteArray payload)
 {
+    QJsonDocument doc = QJsonDocument::fromJson(payload);
     if (topic == "weather/event/lightning") {
-        QJsonDocument doc = QJsonDocument::fromJson(payload);
         if (doc.isObject()) {
             QJsonObject event = doc.object();
             QJsonObject lightning = event["lightning"].toObject();
+            double d = lightning["distance"].toDouble();
+            double distance = d * .621;
             
-            int distance = lightning["distance"].toInt();
-            QString label = QString("Lightning detected %1 miles away").arg(distance);
-            m_lightningLabel->setText(label);
-            m_lightningLabel->show();
+            m_lightningLabel->setText(QString("%1 miles").arg(distance, 0, 'f', 1));
+            m_lightningTimer->stop();
+            m_lightningTimer->setInterval(THIRTY_MINUTES);
+            m_lightningTimer->start();
+            emit touchDetected();
         }
         else {
             qDebug() << __FUNCTION__ << ": Got bad json";
@@ -617,7 +620,6 @@ void MirrorFrame::messageReceivedOnTopic(QString topic, QByteArray payload)
         emit touchDetected();
     }
     else if (topic == "weather/conditions") {
-        QJsonDocument doc = QJsonDocument::fromJson(payload);
         if (doc.isObject()) {
             QJsonObject parent = doc.object();
             QJsonObject values = parent["environment"].toObject();
